@@ -3,20 +3,22 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mind_stretch/logic/api/secure_logging_interceptor.dart';
 
 class ApiClient {
-  final Dio _dio;
+  final Dio _deepseekDio;
+  final Dio _wikipediaDio;
 
-  ApiClient() : _dio = Dio() {
-    _configureDio();
+  ApiClient() : _deepseekDio = Dio(), _wikipediaDio = Dio() {
+    _configureDeepseekDio();
+    _configureWikipediaDio();
   }
 
-  void _configureDio() {
-    // Да, можно было реализовать токином и сделать dart файл. 
+  void _configureDeepseekDio() {
+    // Да, можно было реализовать токином и сделать dart файл.
     // Даже лучше будет...
     final apiKey = dotenv.env['DEEPSEEK_API_KEY'];
 
     if (apiKey == null) throw Exception('>>> API_KEY не найден в .env!');
 
-    _dio.options = BaseOptions(
+    _deepseekDio.options = BaseOptions(
       /// Замечу, что рекомендуют использовать /v1 для совместимости с OpenAI
       /// /v1 это не версия!
       /// * To be compatible with OpenAI, you can also use
@@ -31,8 +33,17 @@ class ApiClient {
     );
 
     // Добавляем интерцепторы при необходимости
-    dio.interceptors.add(SecureLoggingInterceptor());
+    _deepseekDio.interceptors.add(SecureLoggingInterceptor());
   }
 
-  Dio get dio => _dio;
+  void _configureWikipediaDio() {
+    _wikipediaDio.options = BaseOptions(
+      baseUrl: 'https://ru.wikipedia.org/w/api.php',
+      headers: {'Content-Type': 'application/json'},
+    );
+    _wikipediaDio.interceptors.add(SecureLoggingInterceptor());
+  }
+
+  Dio get deepseekDio => _deepseekDio;
+  Dio get wikipediaDio => _wikipediaDio;
 }

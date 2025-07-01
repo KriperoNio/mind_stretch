@@ -11,10 +11,10 @@ class DeepseekRepository {
   DeepseekRepository({required ApiClient apiClient}) : _apiClient = apiClient;
 
   Future<String> generate({required String type}) async {
-    final response = await _apiClient.dio.post(
+    final response = await _apiClient.deepseekDio.post(
       '/chat/completions',
       data: RequestModel(
-        temperature: 1.0,  // Снизил для более предсказуемых рифм
+        temperature: 1.0, // Снизил для более предсказуемых рифм
         maxTokens: 200,
         messages: [
           if (type == 'riddle')
@@ -45,6 +45,14 @@ class DeepseekRepository {
               '- Meaning: Пышное помещение, дворец\n'
               '- Origin: От старослав. "черта" (украшение) + "ог" (место)\n'
               '- Example: "Чертоги царей поражали роскошью"',
+            )
+          else if (type == 'article')
+            Message.system(
+              'Find an interesting Wikipedia article.'
+              'Just write the name. Nothing superfluous.'
+              'Text without formatting (as you usually do in github format).'
+              'Write it in Russian without parentheses.Example:\n'
+              'Парадокс кошки с маслом\nЭффект Мпембы\nЭффект Лейденфроста',
             )
           else
             throw ErrorDescription('Type not defined'),

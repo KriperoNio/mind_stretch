@@ -1,60 +1,101 @@
+import 'package:dio/dio.dart';
+
 class WikipediaSearchResponse {
   final List<WikipediaSearchResult> results;
 
   WikipediaSearchResponse({required this.results});
 
-  factory WikipediaSearchResponse.fromJson(Map<String, dynamic> json) {
-    final query = json['query'] as Map<String, dynamic>;
-    final search = query['search'] as List<dynamic>;
+  factory WikipediaSearchResponse.fromOpensearch(Response<dynamic> response) {
+    // Ответ от action=opensearch приходит в формате List<dynamic>
+    final data = response.data as List<dynamic>;
 
-    return WikipediaSearchResponse(
-      results: search
-          .map((result) => WikipediaSearchResult.fromJson(result))
-          .toList(),
-    );
-  }
-}
+    // Структура ответа opensearch:
+    // [searchTerm, [titles], [descriptions], [urls]]
+    final titles = data[1] as List<dynamic>;
+    final descriptions = data[2] as List<dynamic>;
+    final urls = data[3] as List<dynamic>;
 
-class WikipediaArticleResponse {
-  final int pageId;
-  final String title;
-  final String extract;
+    final results = <WikipediaSearchResult>[];
 
-  WikipediaArticleResponse({
-    required this.pageId,
-    required this.title,
-    required this.extract,
-  });
+    for (var i = 0; i < titles.length; i++) {
+      results.add(
+        WikipediaSearchResult(
+          title: titles[i] as String,
+          description: i < descriptions.length ? descriptions[i] as String : '',
+          url: i < urls.length ? urls[i] as String : '',
+        ),
+      );
+    }
 
-  factory WikipediaArticleResponse.fromJson(Map<String, dynamic> json) {
-    final query = json['query'] as Map<String, dynamic>;
-    final pages = query['pages'] as Map<String, dynamic>;
-    final page = pages.values.first as Map<String, dynamic>;
-
-    return WikipediaArticleResponse(
-      pageId: page['pageid'],
-      title: page['title'],
-      extract: page['extract'],
-    );
+    return WikipediaSearchResponse(results: results);
   }
 }
 
 class WikipediaSearchResult {
-  final int pageId;
   final String title;
-  final String snippet;
+  final String description;
+  final String url;
 
   WikipediaSearchResult({
-    required this.pageId,
     required this.title,
-    required this.snippet,
+    required this.description,
+    required this.url,
+  });
+}
+
+class WikipediaPageResponse {
+  final String batchcomplete;
+  final Query query;
+
+  WikipediaPageResponse({
+    required this.batchcomplete,
+    required this.query,
   });
 
-  factory WikipediaSearchResult.fromJson(Map<String, dynamic> json) {
-    return WikipediaSearchResult(
-      pageId: json['pageid'],
-      title: json['title'],
-      snippet: json['snippet'],
+  factory WikipediaPageResponse.fromJson(Map<String, dynamic> json) {
+    return WikipediaPageResponse(
+      batchcomplete: json['batchcomplete'] as String,
+      query: Query.fromJson(json['query'] as Map<String, dynamic>),
+    );
+  }
+}
+
+class Query {
+  final Map<String, WikiPage> pages;
+
+  Query({required this.pages});
+
+  factory Query.fromJson(Map<String, dynamic> json) {
+    final pagesMap = <String, WikiPage>{};
+    final pagesJson = json['pages'] as Map<String, dynamic>;
+    
+    pagesJson.forEach((key, value) {
+      pagesMap[key] = WikiPage.fromJson(value as Map<String, dynamic>);
+    });
+
+    return Query(pages: pagesMap);
+  }
+}
+
+class WikiPage {
+  final int pageid;
+  final int ns;
+  final String title;
+  final String extract;
+
+  WikiPage({
+    required this.pageid,
+    required this.ns,
+    required this.title,
+    required this.extract,
+  });
+
+  factory WikiPage.fromJson(Map<String, dynamic> json) {
+    return WikiPage(
+      pageid: json['pageid'] as int,
+      ns: json['ns'] as int,
+      title: json['title'] as String,
+      extract: json['extract'] as String,
     );
   }
 }

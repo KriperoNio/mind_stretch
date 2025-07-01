@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mind_stretch/data/models/riddle_model.dart';
+import 'package:mind_stretch/data/models/wikipedia/responce_model.dart';
 import 'package:mind_stretch/logic/scopes/app_scope.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,21 +13,23 @@ class StorageRepository {
   String? getRiddle(String key) => prefs.getString('riddle_$key');
   String? getWord(String key) => prefs.getString('word_$key');
 
-  Future<String> loadRiddle({
+  Future<Riddle> loadRiddle({
     required BuildContext context,
     required String key,
   }) async {
     final cachedRiddle = getRiddle(key);
-    if (cachedRiddle != null && cachedRiddle.isNotEmpty) return cachedRiddle;
+    if (cachedRiddle != null && cachedRiddle.isNotEmpty) {
+      return Riddle.fromString(cachedRiddle);
+    }
 
     try {
       final newRiddle = await AppScope.managerOf(
         context,
       ).getDeepseekRepository.generate(type: 'riddle');
       await prefs.setString('riddle_$key', newRiddle);
-      return newRiddle;
+      return Riddle.fromString(newRiddle);
     } catch (e) {
-      return '>>> Failed to load riddle: ${e.toString()}';
+      throw '>>> Failed to load riddle: ${e.toString()}';
     }
   }
 
@@ -47,31 +51,30 @@ class StorageRepository {
     }
   }
 
-  Future<String> loadArticle({
-    required AsyncSnapshot<String> snapshot,
+  Future<WikiPage> loadArticle({
     required BuildContext context,
     required String key,
   }) async {
     final cachedArticle = getArticle(key);
-    if (cachedArticle != null && cachedArticle.isNotEmpty) return cachedArticle;
+    if (cachedArticle != null && cachedArticle.isNotEmpty) {
+      return await AppScope.managerOf(
+        context,
+      ).getWikipediaRepository.getArticleFromTitle(title: cachedArticle);
+    }
 
     try {
-      final regex = RegExp(r'^\*\*([^*]+)\*\*');
-
-      final searchWord = regex.firstMatch(snapshot.data!)!.group(1)!;
-
-      debugPrint('>>> $searchWord');
+      final title = await AppScope.managerOf(
+        context,
+      ).getDeepseekRepository.generate(type: 'article');
 
       final newArticle = await AppScope.managerOf(
         context,
-      ).getWikipediaRepository.getArticleFromWord(word: searchWord);
+      ).getWikipediaRepository.getArticleFromTitle(title: title);
 
-      debugPrint('>>> $newArticle');
-
-      await prefs.setString('article_$key', newArticle);
+      await prefs.setString('article_$key', newArticle.title);
       return newArticle;
     } catch (e) {
-      return '>>> Failed to load article: ${e.toString()}';
+      throw '>>> Failed to load article: ${e.toString()}';
     }
   }
 }

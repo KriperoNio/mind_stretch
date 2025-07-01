@@ -35,10 +35,10 @@ class SecureLoggingInterceptor extends Interceptor {
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     if (kDebugMode) {
       print('''
-      >>> Secure Response <<<
-      Status: ${response.statusCode}
-      Data: ${response.data}
-    ''');
+        >>> Secure Response <<<
+        Status: ${response.statusCode}
+        Data: ${response.data}
+      ''');
     }
     super.onResponse(response, handler);
   }

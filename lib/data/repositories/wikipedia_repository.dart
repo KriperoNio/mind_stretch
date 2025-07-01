@@ -8,31 +8,33 @@ class WikipediaRepository {
 
   WikipediaRepository({required ApiClient apiClient}) : _apiClient = apiClient;
 
-  Future<String> getArticleFromWord({required String word}) async {
-    // Сначала найдем статьи с word и получим id
-    final searchRequest = WikipediaSearchRequest(searchQuery: word);
-    final searchResponse = await _apiClient.dio.get(
+  Future<WikiPage> getArticleFromTitle({required String title}) async {
+    // Сначала найдем статьи с title и получим url
+    final searchRequest = WikipediaSearchRequest(searchQuery: title);
+    final searchResponse = await _apiClient.wikipediaDio.get(
       _url,
       queryParameters: searchRequest.toQueryParameters(),
     );
 
-    final searchResults = WikipediaSearchResponse.fromJson(
-      searchResponse.data,
+    final searchResults = WikipediaSearchResponse.fromOpensearch(
+      searchResponse,
     ).results;
 
     if (searchResults.isEmpty) {
-      throw Exception('>>> Не найдена статья в Википедии "$word"');
+      throw Exception('>>> Не найдена статья в Википедии "$title"');
     }
 
-    // Затем извлечем содержимое статьи по id
-    final articleRequest = WikipediaArticleRequest(
-      pageId: searchResults.first.pageId,
-    );
-    final articleResponse = await _apiClient.dio.get(
+    final pageRequest = WikipediaPageRequest(title: title);
+
+    final pageResponse = await _apiClient.wikipediaDio.get(
       _url,
-      queryParameters: articleRequest.toQueryParameters(),
+      queryParameters: pageRequest.toQueryParameters(),
     );
 
-    return WikipediaArticleResponse.fromJson(articleResponse.data).extract;
+    final pageResults = WikipediaPageResponse.fromJson(
+      pageResponse.data,
+    ).query.pages.values.first;
+
+    return pageResults;
   }
 }

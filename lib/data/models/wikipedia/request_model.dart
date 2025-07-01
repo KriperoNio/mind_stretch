@@ -10,24 +10,24 @@ class WikipediaSearchRequest {
       'search': searchQuery,
       'limit': '1', // Кол-во получаемых id
       'namespace': 0,
+      'explaintext': true,
     };
   }
 }
 
-class WikipediaArticleRequest {
-  final int pageId;
+class WikipediaPageRequest {
+  final String title;
 
-  WikipediaArticleRequest({required this.pageId});
+  WikipediaPageRequest({required this.title});
 
   Map<String, dynamic> toQueryParameters() {
     return {
       'action': 'query',
       'format': 'json',
       'prop': 'extracts',
-      'pageids': pageId.toString(),
-      'explaintext': '',
-      'exintro': '',
-      'utf8': '',
+      'titles': title,
+      'explaintext': true,
+      'exintro': true,
     };
   }
 }
