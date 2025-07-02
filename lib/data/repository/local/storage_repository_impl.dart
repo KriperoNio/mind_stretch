@@ -10,6 +10,15 @@ class StorageRepositoryImpl implements StorageRepository {
   static const String _riddleKey = 'riddle';
   static const String _titleArticleKey = 'title_article';
   static const String _wordKey = 'word';
+  static const String _currentDay = 'current_day';
+
+  @override
+  String get currentDate => prefs.getString(_currentDay) ?? '';
+
+  @override
+  set currentDate(String? value) {
+    prefs.setString(_currentDay, value!);
+  }
 
   @override
   Riddle? loadRiddle() {
@@ -18,20 +27,20 @@ class StorageRepositoryImpl implements StorageRepository {
   }
 
   @override
-  String? loadTitleArticle() => prefs.getString(_titleArticleKey);
-
-  @override
-  String? loadWord() => prefs.getString(_wordKey);
-
-  @override
   void saveRiddle({required String riddle}) {
     prefs.setString(_riddleKey, riddle);
   }
 
   @override
+  String? loadTitleArticle() => prefs.getString(_titleArticleKey);
+
+  @override
   void saveTitleArticle({required String titleArticle}) {
     prefs.setString(_titleArticleKey, titleArticle);
   }
+
+  @override
+  String? loadWord() => prefs.getString(_wordKey);
 
   @override
   void saveWord({required String word}) {

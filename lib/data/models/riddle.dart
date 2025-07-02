@@ -20,6 +20,6 @@ class Riddle {
 
   @override
   String toString() {
-    return 'Riddle: $riddle\nAnswer: $answer';
+    return '$riddle\nAnswer: $answer';
   }
 }
