@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 
+import '../wiki_page.dart';
+
 class WikipediaSearchResponse {
   final List<WikipediaSearchResult> results;
 
@@ -47,10 +49,7 @@ class WikipediaPageResponse {
   final String batchcomplete;
   final Query query;
 
-  WikipediaPageResponse({
-    required this.batchcomplete,
-    required this.query,
-  });
+  WikipediaPageResponse({required this.batchcomplete, required this.query});
 
   factory WikipediaPageResponse.fromJson(Map<String, dynamic> json) {
     return WikipediaPageResponse(
@@ -68,34 +67,11 @@ class Query {
   factory Query.fromJson(Map<String, dynamic> json) {
     final pagesMap = <String, WikiPage>{};
     final pagesJson = json['pages'] as Map<String, dynamic>;
-    
+
     pagesJson.forEach((key, value) {
       pagesMap[key] = WikiPage.fromJson(value as Map<String, dynamic>);
     });
 
     return Query(pages: pagesMap);
-  }
-}
-
-class WikiPage {
-  final int pageid;
-  final int ns;
-  final String title;
-  final String extract;
-
-  WikiPage({
-    required this.pageid,
-    required this.ns,
-    required this.title,
-    required this.extract,
-  });
-
-  factory WikiPage.fromJson(Map<String, dynamic> json) {
-    return WikiPage(
-      pageid: json['pageid'] as int,
-      ns: json['ns'] as int,
-      title: json['title'] as String,
-      extract: json['extract'] as String,
-    );
   }
 }

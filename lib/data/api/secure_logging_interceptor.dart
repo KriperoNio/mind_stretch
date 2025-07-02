@@ -22,10 +22,10 @@ class SecureLoggingInterceptor extends Interceptor {
 
     debugPrint('''
       >>> Secure Request <<<
-      URI: $safeUri
-      Method: ${options.method}
-      Headers: $safeHeaders
-      Body: ${options.data}
+      > URI: $safeUri
+      > Method: ${options.method}
+      > Headers: $safeHeaders
+      > Body: ${options.data}
     ''');
 
     super.onRequest(options, handler);
@@ -33,27 +33,23 @@ class SecureLoggingInterceptor extends Interceptor {
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    if (kDebugMode) {
-      print('''
+    debugPrint('''
         >>> Secure Response <<<
-        Status: ${response.statusCode}
-        Data: ${response.data}
-      ''');
-    }
+        > Status: ${response.statusCode}
+        > Data: ${response.data}
+    ''');
     super.onResponse(response, handler);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (kDebugMode) {
-      print('''
+    debugPrint('''
       >>> Secure Error <<<
-      URI: ${err.requestOptions.uri}
-      Error: ${err.message}
-      Status: ${err.response?.statusCode}
-      Response: ${err.response?.data}
+      > URI: ${err.requestOptions.uri}
+      > Error: ${err.message}
+      > Status: ${err.response?.statusCode}
+      > Response: ${err.response?.data}
     ''');
-    }
     super.onError(err, handler);
   }
 

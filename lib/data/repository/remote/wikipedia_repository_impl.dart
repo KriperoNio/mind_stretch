@@ -1,17 +1,22 @@
-import 'package:mind_stretch/data/models/wikipedia/request_model.dart';
-import 'package:mind_stretch/data/models/wikipedia/responce_model.dart';
-import 'package:mind_stretch/logic/api/api_client.dart';
+import 'package:mind_stretch/data/api/api_client.dart';
+import 'package:mind_stretch/data/models/wiki_page.dart';
+import 'package:mind_stretch/logic/repository/remote/wikipedia_repository.dart';
 
-class WikipediaRepository {
-  final ApiClient _apiClient;
+import '../../models/wikipedia/request_model.dart';
+import '../../models/wikipedia/responce_model.dart';
+
+class WikipediaRepositoryImpl implements WikipediaRepository {
+  @override
+  final ApiClient apiClient;
   final String _url = 'https://ru.wikipedia.org/w/api.php';
 
-  WikipediaRepository({required ApiClient apiClient}) : _apiClient = apiClient;
+  WikipediaRepositoryImpl({required this.apiClient});
 
+  @override
   Future<WikiPage> getArticleFromTitle({required String title}) async {
     // Сначала найдем статьи с title и получим url
     final searchRequest = WikipediaSearchRequest(searchQuery: title);
-    final searchResponse = await _apiClient.wikipediaDio.get(
+    final searchResponse = await apiClient.wikipediaDio.get(
       _url,
       queryParameters: searchRequest.toQueryParameters(),
     );
@@ -26,15 +31,15 @@ class WikipediaRepository {
 
     final pageRequest = WikipediaPageRequest(title: title);
 
-    final pageResponse = await _apiClient.wikipediaDio.get(
+    final pageResponse = await apiClient.wikipediaDio.get(
       _url,
       queryParameters: pageRequest.toQueryParameters(),
     );
 
-    final pageResults = WikipediaPageResponse.fromJson(
+    final wikiPage = WikipediaPageResponse.fromJson(
       pageResponse.data,
     ).query.pages.values.first;
 
-    return pageResults;
+    return wikiPage;
   }
 }

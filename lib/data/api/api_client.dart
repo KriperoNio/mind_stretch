@@ -1,19 +1,19 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:mind_stretch/logic/api/secure_logging_interceptor.dart';
+import 'package:mind_stretch/data/api/secure_logging_interceptor.dart';
 
 class ApiClient {
   final Dio _deepseekDio;
   final Dio _wikipediaDio;
 
+  /// Разделение api клиента для удобной работы с запросами,
+  /// чтобы header-ы не мешали разным сервисам.
   ApiClient() : _deepseekDio = Dio(), _wikipediaDio = Dio() {
     _configureDeepseekDio();
     _configureWikipediaDio();
   }
 
   void _configureDeepseekDio() {
-    // Да, можно было реализовать токином и сделать dart файл.
-    // Даже лучше будет...
     final apiKey = dotenv.env['DEEPSEEK_API_KEY'];
 
     if (apiKey == null) throw Exception('>>> API_KEY не найден в .env!');
