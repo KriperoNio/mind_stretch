@@ -1,10 +1,7 @@
-import 'package:mind_stretch/data/api/api_client.dart';
 import 'package:mind_stretch/data/models/wiki_page.dart';
 
 abstract class WikipediaRepository {
-  final ApiClient apiClient;
-
-  WikipediaRepository({required this.apiClient});
-
+  /// Выдает [WikiPage] в зависимости от найденной статьи
+  /// по заголовку.
   Future<WikiPage> getArticleFromTitle({required String title});
 }

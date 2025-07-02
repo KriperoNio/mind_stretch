@@ -1,15 +1,15 @@
 import 'package:mind_stretch/data/models/riddle.dart';
-import 'package:mind_stretch/data/models/wiki_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class StorageRepository {
-  final SharedPreferences prefs;
+  Riddle? loadRiddle();
 
-  const StorageRepository({required this.prefs});
+  String? loadWord();
 
-  Riddle loadRiddle({required String key});
+  String? loadTitleArticle();
 
-  String? loadWord({required String key});
+  void saveRiddle({required String riddle});
 
-  WikiPage loadArticle({required String key});
+  void saveWord({required String word});
+
+  void saveTitleArticle({required String titleArticle});
 }

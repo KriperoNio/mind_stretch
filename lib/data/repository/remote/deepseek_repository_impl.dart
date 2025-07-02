@@ -8,12 +8,13 @@ import '../../models/deepseek/responce_model.dart';
 import '../../models/riddle.dart';
 
 class DeepseekRepositoryImpl implements DeepseekRepository {
-  @override
   final ApiClient apiClient;
 
   const DeepseekRepositoryImpl({required this.apiClient});
 
   @override
+  /// Генерирует запрос для deepseek в зависимости от type-а 
+  /// нужного результата.
   Future<T> generate<T>({required GenerationType type}) async {
     final systemMessage = _getSystemMessage(type);
     final response = await _makeApiRequest(systemMessage);
@@ -73,7 +74,7 @@ class DeepseekRepositoryImpl implements DeepseekRepository {
 
   T _parseResponse<T>(ChatCompletionResponse response, GenerationType type) {
     final content = response.content;
-    
+
     switch (type) {
       case GenerationType.riddle:
         return Riddle.fromString(content) as T;

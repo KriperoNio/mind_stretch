@@ -6,7 +6,6 @@ import '../../models/wikipedia/request_model.dart';
 import '../../models/wikipedia/responce_model.dart';
 
 class WikipediaRepositoryImpl implements WikipediaRepository {
-  @override
   final ApiClient apiClient;
   final String _url = 'https://ru.wikipedia.org/w/api.php';
 
