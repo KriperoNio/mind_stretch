@@ -7,6 +7,7 @@ import 'package:mind_stretch/data/repository/local/storage_repository_impl.dart'
 import 'package:mind_stretch/data/repository/remote/deepseek_repository_impl.dart';
 import 'package:mind_stretch/data/repository/remote/wikipedia_repository_impl.dart';
 import 'package:mind_stretch/logic/bloc/daily_content_bloc.dart';
+import 'package:mind_stretch/ui/home/home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -42,37 +43,7 @@ class MindStretch extends StatelessWidget {
             deepseekRepository: DeepseekRepositoryImpl(apiClient: apiClient),
             wikipediaRepository: WikipediaRepositoryImpl(apiClient: apiClient),
           )..add(DailyContentCheckAndLoad()),
-          child: BlocBuilder<DailyContentBloc, DailyContentState>(
-            builder: (context, state) {
-              if (state is DailyContentLoading) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (state is DailyContentLoaded) {
-                return Scaffold(
-                  appBar: AppBar(),
-                  body: SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
-                          Text('Загадка: ${state.riddle.riddle}'),
-                          Text('Слово дня: ${state.word}'),
-                          Text('Статья: ${state.article.title}'),
-                          Expanded(
-                            child: SingleChildScrollView(
-                              child: Text(state.article.extract!),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              } else {
-                return const Text('Ошибка загрузки');
-              }
-            },
-          ),
+          child: HomePage(),
         ),
       ),
     );

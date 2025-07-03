@@ -48,4 +48,11 @@ class StorageRepositoryImpl implements StorageRepository {
   Future<void> setCurrentDate(String? value) async {
     (await prefs).setString(_currentDate, value!);
   }
+  
+  @override
+  Future<void> resetAll() async {
+    (await prefs).remove(_titleArticleKey);
+    (await prefs).remove(_riddleKey);
+    (await prefs).remove(_wordKey);
+  }
 }

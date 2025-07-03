@@ -16,4 +16,6 @@ abstract class StorageRepository {
   Future<String?> loadTitleArticle();
 
   Future<void> saveTitleArticle({required String titleArticle});
+
+  Future<void> resetAll();
 }
