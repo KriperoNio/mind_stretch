@@ -1,20 +1,19 @@
 import 'package:mind_stretch/data/models/riddle.dart';
 
 abstract class StorageRepository {
-  String? get currentDate;
+  Future<String?> getCurrentDate();
 
-  Riddle? loadRiddle();
+  Future<void> setCurrentDate(String? value);
 
-  String? loadWord();
+  Future<Riddle?> loadRiddle();
 
-  String? loadTitleArticle();
+  Future<void> saveRiddle({required String riddle});
 
-  set currentDate(String? value);
+  Future<String?> loadWord();
 
-  void saveRiddle({required String riddle});
+  Future<void> saveWord({required String word});
 
-  void saveWord({required String word});
+  Future<String?> loadTitleArticle();
 
-  void saveTitleArticle({required String titleArticle});
-  
+  Future<void> saveTitleArticle({required String titleArticle});
 }

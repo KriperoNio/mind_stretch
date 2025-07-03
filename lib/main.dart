@@ -7,8 +7,6 @@ import 'package:mind_stretch/data/repository/local/storage_repository_impl.dart'
 import 'package:mind_stretch/data/repository/remote/deepseek_repository_impl.dart';
 import 'package:mind_stretch/data/repository/remote/wikipedia_repository_impl.dart';
 import 'package:mind_stretch/logic/bloc/daily_content_bloc.dart';
-import 'package:mind_stretch/logic/bloc/daily_content_event.dart';
-import 'package:mind_stretch/logic/bloc/daily_content_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -16,14 +14,14 @@ void main() async {
 
   // Инициализация окружения и зависимостей
   await dotenv.load(fileName: ".env"); // Загрузка API ключей из .env
-  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  final Future<SharedPreferences> prefs = SharedPreferences.getInstance();
   final ApiClient apiClient = ApiClient();
 
   runApp(MindStretch(prefs: prefs, apiClient: apiClient));
 }
 
 class MindStretch extends StatelessWidget {
-  final SharedPreferences prefs;
+  final Future<SharedPreferences> prefs;
   final ApiClient apiClient;
   const MindStretch({super.key, required this.prefs, required this.apiClient});
 

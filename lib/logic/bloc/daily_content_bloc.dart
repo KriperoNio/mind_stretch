@@ -1,21 +1,23 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mind_stretch/data/models/riddle.dart';
+import 'package:mind_stretch/data/models/wiki_page.dart';
 import '../repository/local/storage_repository.dart';
 import '../repository/remote/deepseek_repository.dart';
 import '../repository/remote/wikipedia_repository.dart';
-import 'daily_content_event.dart';
-import 'daily_content_state.dart';
 
 class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
-  final StorageRepository storageRepository;
-  final DeepseekRepository deepseekRepository;
-  final WikipediaRepository wikipediaRepository;
+  final StorageRepository _storageRepository;
+  final DeepseekRepository _deepseekRepository;
+  final WikipediaRepository _wikipediaRepository;
 
   DailyContentBloc({
-    required this.storageRepository,
-    required this.deepseekRepository,
-    required this.wikipediaRepository,
-  }) : super(DailyContentLoading()) {
+    required StorageRepository storageRepository,
+    required DeepseekRepository deepseekRepository,
+    required WikipediaRepository wikipediaRepository,
+  }) : _deepseekRepository = deepseekRepository,
+       _storageRepository = storageRepository,
+       _wikipediaRepository = wikipediaRepository,
+       super(DailyContentLoading()) {
     on<DailyContentCheckAndLoad>(_onCheckAndLoad);
     on<DailyContentRefresh>(_onRefresh);
   }
@@ -30,38 +32,38 @@ class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
       0,
       10,
     ); // YYYY-MM-DD
-    final savedDate = storageRepository.currentDate;
+    final savedDate = await _storageRepository.getCurrentDate();
 
     final isNewDay = savedDate != currentDate;
 
     if (isNewDay) {
       // Генерация новых данных
-      final riddle = await deepseekRepository.generate<Riddle>(
+      final riddle = await _deepseekRepository.generate<Riddle>(
         type: GenerationType.riddle,
       );
-      final word = await deepseekRepository.generate<String>(
+      final word = await _deepseekRepository.generate<String>(
         type: GenerationType.word,
       );
-      final titleArticle = await deepseekRepository.generate<String>(
+      final titleArticle = await _deepseekRepository.generate<String>(
         type: GenerationType.articleTitle,
       );
-      final article = await wikipediaRepository.getArticleFromTitle(
+      final article = await _wikipediaRepository.getArticleFromTitle(
         title: titleArticle,
       );
-      
-      storageRepository.saveRiddle(riddle: riddle.toString());
-      storageRepository.saveWord(word: word);
-      storageRepository.saveTitleArticle(titleArticle: titleArticle);
-      storageRepository.currentDate = currentDate; // сохраняем новую дату
+
+      _storageRepository.saveRiddle(riddle: riddle.toString());
+      _storageRepository.saveWord(word: word);
+      _storageRepository.saveTitleArticle(titleArticle: titleArticle);
+      _storageRepository.setCurrentDate(currentDate); // сохраняем новую дату
 
       emit(DailyContentLoaded(riddle: riddle, word: word, article: article));
     } else {
-      final riddle = storageRepository.loadRiddle();
-      final word = storageRepository.loadWord();
-      final title = storageRepository.loadTitleArticle();
+      final riddle = await _storageRepository.loadRiddle();
+      final word = await _storageRepository.loadWord();
+      final title = await _storageRepository.loadTitleArticle();
 
       if (riddle != null && word != null && title != null) {
-        final article = await wikipediaRepository.getArticleFromTitle(
+        final article = await _wikipediaRepository.getArticleFromTitle(
           title: title,
         );
         emit(DailyContentLoaded(riddle: riddle, word: word, article: article));
@@ -79,23 +81,53 @@ class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
   ) async {
     emit(DailyContentLoading());
 
-    final riddle = await deepseekRepository.generate<Riddle>(
+    final riddle = await _deepseekRepository.generate<Riddle>(
       type: GenerationType.riddle,
     );
-    final word = await deepseekRepository.generate<String>(
+    final word = await _deepseekRepository.generate<String>(
       type: GenerationType.word,
     );
-    final titleArticle = await deepseekRepository.generate<String>(
+    final titleArticle = await _deepseekRepository.generate<String>(
       type: GenerationType.articleTitle,
     );
-    final article = await wikipediaRepository.getArticleFromTitle(
+    final article = await _wikipediaRepository.getArticleFromTitle(
       title: titleArticle,
     );
 
-    storageRepository.saveRiddle(riddle: riddle.toString());
-    storageRepository.saveWord(word: word);
-    storageRepository.saveTitleArticle(titleArticle: titleArticle);
+    _storageRepository.saveRiddle(riddle: riddle.toString());
+    _storageRepository.saveWord(word: word);
+    _storageRepository.saveTitleArticle(titleArticle: titleArticle);
 
     emit(DailyContentLoaded(riddle: riddle, word: word, article: article));
   }
 }
+
+sealed class DailyContentState {}
+
+class DailyContentLoading extends DailyContentState {}
+
+class DailyContentLoaded extends DailyContentState {
+  final Riddle riddle;
+  final String word;
+  final WikiPage article;
+
+  DailyContentLoaded({
+    required this.riddle,
+    required this.word,
+    required this.article,
+  });
+}
+
+class DailyContentError extends DailyContentState {
+  final String message;
+
+  DailyContentError(this.message);
+}
+
+sealed class DailyContentEvent {}
+
+/// Проверка даты и загрузка данных при необходимости
+class DailyContentCheckAndLoad extends DailyContentEvent {}
+
+/// Принудительное обновление данных
+class DailyContentRefresh extends DailyContentEvent {}
