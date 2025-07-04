@@ -14,8 +14,8 @@ class HomePage extends StatelessWidget {
         } else if (state is DailyContentLoaded) {
           return Scaffold(
             floatingActionButton: FloatingActionButton(onPressed: () {
-              context.read<DailyContentBloc>().add(DailyContentRefresh());
-            }),
+              context.read<DailyContentBloc>().add(DailyContentForceReset());
+            }, child: Icon(Icons.replay_rounded),),
             appBar: AppBar(),
             body: SafeArea(
               bottom: false,

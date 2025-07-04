@@ -19,6 +19,7 @@ class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
        _wikipediaRepository = wikipediaRepository,
        super(DailyContentLoading()) {
     on<DailyContentCheckAndLoad>(_onCheckAndLoad);
+    on<DailyContentForceReset>(_onForceReset);
     on<DailyContentRefresh>(_onRefresh);
   }
 
@@ -33,112 +34,134 @@ class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
     final isNewDay = savedDate != currentDate;
 
     if (isNewDay) {
-      _storageRepository.resetAll();
+      try {
+        _storageRepository.resetAll();
 
-      final riddle = await _deepseekRepository.generate<Riddle>(
-        type: GenerationType.riddle,
-      );
-      _storageRepository.saveRiddle(riddle: riddle.toString());
-      emit(DailyContentLoaded().copyWith(riddle: riddle));
-
-      final word = await _deepseekRepository.generate<String>(
-        type: GenerationType.word,
-      );
-      _storageRepository.saveWord(word: word);
-      emit(DailyContentLoaded().copyWith(word: word));
-
-      final titleArticle = await _deepseekRepository.generate<String>(
-        type: GenerationType.articleTitle,
-      );
-      _storageRepository.saveTitleArticle(titleArticle: titleArticle);
-      final article = await _wikipediaRepository.getArticleFromTitle(
-        title: titleArticle,
-      );
-      emit(
-        DailyContentLoaded().copyWith(
-          article: article,
-          titleArticle: titleArticle,
-        ),
-      );
-
-      _storageRepository.setCurrentDate(currentDate);
-    } else {
-      final riddle = await _storageRepository.loadRiddle();
-      emit(DailyContentLoaded().copyWith(riddle: riddle));
-
-      final word = await _storageRepository.loadWord();
-      emit(DailyContentLoaded().copyWith(word: word));
-
-      final title = await _storageRepository.loadTitleArticle();
-      emit(DailyContentLoaded().copyWith(titleArticle: title));
-
-      if (riddle != null && word != null && title != null) {
-        final article = await _wikipediaRepository.getArticleFromTitle(
-          title: title,
+        final riddle = await _deepseekRepository.generate<Riddle>(
+          type: GenerationType.riddle,
         );
+
+        final word = await _deepseekRepository.generate<String>(
+          type: GenerationType.word,
+        );
+
+        final titleArticle = await _deepseekRepository.generate<String>(
+          type: GenerationType.articleTitle,
+        );
+
+        final article = await _wikipediaRepository.getArticleFromTitle(
+          title: titleArticle,
+        );
+
+        _storageRepository
+          ..saveRiddle(riddle: riddle.toString())
+          ..saveWord(word: word)
+          ..saveTitleArticle(titleArticle: titleArticle)
+          ..setCurrentDate(currentDate);
+
         emit(
           DailyContentLoaded(
             riddle: riddle,
             word: word,
             article: article,
-            titleArticle: title,
+            titleArticle: titleArticle,
           ),
         );
-      } else {
-        add(DailyContentRefresh());
+      } catch (e) {
+        emit(DailyContentError('Ошибка: $e'));
+      }
+    } else {
+      try {
+        final riddle = await _storageRepository.loadRiddle();
+
+        final word = await _storageRepository.loadWord();
+
+        final title = await _storageRepository.loadTitleArticle();
+
+        if (riddle != null && word != null && title != null) {
+          final article = await _wikipediaRepository.getArticleFromTitle(
+            title: title,
+          );
+          emit(
+            DailyContentLoaded(
+              riddle: riddle,
+              word: word,
+              article: article,
+              titleArticle: title,
+            ),
+          );
+        } else {
+          add(DailyContentRefresh());
+        }
+      } catch (e) {
+        emit(DailyContentError('Ошибка: $e'));
       }
     }
+  }
+
+  Future<void> _onForceReset(
+    DailyContentForceReset event,
+    Emitter<DailyContentState> emit,
+  ) async {
+    // Сбрасываем все сохраненные данные
+    _storageRepository.resetAll();
+
+    // Устанавливаем состояние загрузки
+    emit(DailyContentLoading());
+
+    // Загружаем новый контент
+    add(DailyContentCheckAndLoad());
   }
 
   Future<void> _onRefresh(
     DailyContentRefresh event,
     Emitter<DailyContentState> emit,
   ) async {
-    // Если не DailyContentLoaded — сбрасываем всё и загружаем заново
-    if (state is! DailyContentLoaded) {
-      await _storageRepository.resetAll();
-      emit(DailyContentLoading());
-    }
-
     DailyContentLoaded current = state is DailyContentLoaded
         ? state as DailyContentLoaded
         : DailyContentLoaded();
 
     bool updated = false;
 
-    if (current.riddle == null) {
-      final riddle = await _deepseekRepository.generate<Riddle>(
+    Riddle? riddle = current.riddle;
+    if (riddle == null) {
+      riddle = await _deepseekRepository.generate<Riddle>(
         type: GenerationType.riddle,
       );
-      await _storageRepository.saveRiddle(riddle: riddle.toString());
-      emit(current.copyWith(riddle: riddle));
+      _storageRepository.saveRiddle(riddle: riddle.toString());
       updated = true;
     }
 
-    if (current.word == null) {
-      final word = await _deepseekRepository.generate<String>(
+    String? word = current.word;
+    if (word == null) {
+      word = await _deepseekRepository.generate<String>(
         type: GenerationType.word,
       );
-      await _storageRepository.saveWord(word: word);
-      emit(current.copyWith(word: word));
+      _storageRepository.saveWord(word: word);
       updated = true;
     }
 
-    if (current.article == null || current.titleArticle == null) {
-      final titleArticle = await _deepseekRepository.generate<String>(
+    String? title = current.titleArticle;
+    WikiPage? article = current.article;
+    if (title == null || article == null) {
+      title = await _deepseekRepository.generate<String>(
         type: GenerationType.articleTitle,
       );
-      await _storageRepository.saveTitleArticle(titleArticle: titleArticle);
-
-      final article = await _wikipediaRepository.getArticleFromTitle(
-        title: titleArticle,
-      );
-
-      emit(current.copyWith(titleArticle: titleArticle, article: article));
+      _storageRepository.saveTitleArticle(titleArticle: title);
+      article =  await _wikipediaRepository.getArticleFromTitle(title: title);
       updated = true;
     }
 
-    if (updated) emit(current);
+    if (updated) {
+      emit(
+        DailyContentLoaded(
+          riddle: riddle,
+          word: word,
+          titleArticle: title,
+          article: article,
+        ),
+      );
+    }
   }
 }
 
@@ -153,20 +176,6 @@ class DailyContentLoaded extends DailyContentState {
   final String? titleArticle;
 
   DailyContentLoaded({this.riddle, this.word, this.article, this.titleArticle});
-
-  DailyContentLoaded copyWith({
-    Riddle? riddle,
-    String? word,
-    WikiPage? article,
-    String? titleArticle,
-  }) {
-    return DailyContentLoaded(
-      riddle: riddle ?? this.riddle,
-      word: word ?? this.word,
-      article: article ?? this.article,
-      titleArticle: titleArticle ?? this.titleArticle,
-    );
-  }
 }
 
 class DailyContentError extends DailyContentState {
@@ -180,9 +189,8 @@ sealed class DailyContentEvent {}
 /// Проверка даты и загрузка данных при необходимости
 class DailyContentCheckAndLoad extends DailyContentEvent {}
 
-/// Принудительное обновление данных
-class DailyContentRefresh extends DailyContentEvent {
-  final DailyContentLoaded? dailyContentState;
+/// Принудительный сброс всех данных и загрузка нового
+class DailyContentForceReset extends DailyContentEvent {}
 
-  DailyContentRefresh({this.dailyContentState});
-}
+/// Принудительное обновление данных
+class DailyContentRefresh extends DailyContentEvent {}
