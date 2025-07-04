@@ -1,26 +1,46 @@
+import 'dart:async';
+import 'dart:ui';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mind_stretch/data/models/riddle.dart';
 import 'package:mind_stretch/data/models/wiki_page.dart';
+import 'package:mind_stretch/logic/notifiers/day_value_notifier.dart';
 import '../repository/local/storage_repository.dart';
 import '../repository/remote/deepseek_repository.dart';
 import '../repository/remote/wikipedia_repository.dart';
 
 class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
+  late final VoidCallback _listener;
+  final DayValueNotifier _dayNotifier;
   final StorageRepository _storageRepository;
   final DeepseekRepository _deepseekRepository;
   final WikipediaRepository _wikipediaRepository;
 
   DailyContentBloc({
+    required DayValueNotifier dayNotifier,
     required StorageRepository storageRepository,
     required DeepseekRepository deepseekRepository,
     required WikipediaRepository wikipediaRepository,
-  }) : _storageRepository = storageRepository,
+  }) : _dayNotifier = dayNotifier,
+       _storageRepository = storageRepository,
        _deepseekRepository = deepseekRepository,
        _wikipediaRepository = wikipediaRepository,
        super(DailyContentLoading()) {
     on<DailyContentCheckAndLoad>(_onCheckAndLoad);
     on<DailyContentForceReset>(_onForceReset);
     on<DailyContentRefresh>(_onRefresh);
+
+    _listener = () {
+      add(DailyContentCheckAndLoad());
+    };
+    _dayNotifier.addListener(_listener);
+  }
+
+  // Не забыл! )
+  @override
+  Future<void> close() {
+    _dayNotifier.removeListener(_listener);
+    return super.close();
   }
 
   Future<void> _onCheckAndLoad(
@@ -148,7 +168,7 @@ class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
         type: GenerationType.articleTitle,
       );
       _storageRepository.saveTitleArticle(titleArticle: title);
-      article =  await _wikipediaRepository.getArticleFromTitle(title: title);
+      article = await _wikipediaRepository.getArticleFromTitle(title: title);
       updated = true;
     }
 
