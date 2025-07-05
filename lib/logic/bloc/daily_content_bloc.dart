@@ -1,28 +1,26 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mind_stretch/data/models/riddle.dart';
 import 'package:mind_stretch/data/models/wiki_page.dart';
-import 'package:mind_stretch/logic/notifiers/day_value_notifier.dart';
-import '../repository/local/storage_repository.dart';
-import '../repository/remote/deepseek_repository.dart';
-import '../repository/remote/wikipedia_repository.dart';
+import 'package:mind_stretch/logic/repository/local/storage_repository.dart';
+import 'package:mind_stretch/logic/repository/remote/deepseek_repository.dart';
+import 'package:mind_stretch/logic/repository/remote/wikipedia_repository.dart';
 
 class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
-  late final VoidCallback _listener;
-  final DayValueNotifier _dayNotifier;
+  late final Timer _dayCheckTimer;
+
   final StorageRepository _storageRepository;
   final DeepseekRepository _deepseekRepository;
   final WikipediaRepository _wikipediaRepository;
 
+  DateTime _lastDay = DateTime.now();
+
   DailyContentBloc({
-    required DayValueNotifier dayNotifier,
     required StorageRepository storageRepository,
     required DeepseekRepository deepseekRepository,
     required WikipediaRepository wikipediaRepository,
-  }) : _dayNotifier = dayNotifier,
-       _storageRepository = storageRepository,
+  }) : _storageRepository = storageRepository,
        _deepseekRepository = deepseekRepository,
        _wikipediaRepository = wikipediaRepository,
        super(DailyContentLoading()) {
@@ -30,16 +28,20 @@ class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
     on<DailyContentForceReset>(_onForceReset);
     on<DailyContentRefresh>(_onRefresh);
 
-    _listener = () {
-      add(DailyContentCheckAndLoad());
-    };
-    _dayNotifier.addListener(_listener);
+    _dayCheckTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      final now = DateTime.now();
+      if (now.day != _lastDay.day ||
+          now.month != _lastDay.month ||
+          now.year != _lastDay.year) {
+        _lastDay = now;
+        add(DailyContentCheckAndLoad());
+      }
+    });
   }
 
-  // Не забыл! )
   @override
   Future<void> close() {
-    _dayNotifier.removeListener(_listener);
+    _dayCheckTimer.cancel();
     return super.close();
   }
 
@@ -57,11 +59,11 @@ class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
       try {
         _storageRepository.resetAll();
 
-        final riddle = await _deepseekRepository.generate<Riddle>(
+        final riddle = _deepseekRepository.generate<Riddle>(
           type: GenerationType.riddle,
         );
 
-        final word = await _deepseekRepository.generate<String>(
+        final word = _deepseekRepository.generate<String>(
           type: GenerationType.word,
         );
 
@@ -69,21 +71,25 @@ class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
           type: GenerationType.articleTitle,
         );
 
-        final article = await _wikipediaRepository.getArticleFromTitle(
-          title: titleArticle,
-        );
+        final article = _wikipediaRepository
+            .getArticleFromTitle(title: titleArticle)
+            .onError((e, ee) {
+              return WikiPage();
+            });
+
+        final results = await Future.wait([riddle, word, article]);
 
         _storageRepository
-          ..saveRiddle(riddle: riddle.toString())
-          ..saveWord(word: word)
+          ..saveRiddle(riddle: (results[0] as Riddle).toString())
+          ..saveWord(word: results[1] as String)
           ..saveTitleArticle(titleArticle: titleArticle)
           ..setCurrentDate(currentDate);
 
         emit(
           DailyContentLoaded(
-            riddle: riddle,
-            word: word,
-            article: article,
+            riddle: results[0] as Riddle,
+            word: results[1] as String,
+            article: results[2] as WikiPage,
             titleArticle: titleArticle,
           ),
         );
@@ -114,7 +120,7 @@ class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
           add(DailyContentRefresh());
         }
       } catch (e) {
-        emit(DailyContentError('Ошибка: $e'));
+        emit(DailyContentError('$e'));
       }
     }
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:mind_stretch/data/api/api_client.dart';
 import 'package:mind_stretch/data/models/wiki_page.dart';
 import 'package:mind_stretch/logic/repository/remote/wikipedia_repository.dart';
@@ -25,7 +26,7 @@ class WikipediaRepositoryImpl implements WikipediaRepository {
     ).results;
 
     if (searchResults.isEmpty) {
-      throw Exception('>>> Не найдена статья в Википедии "$title"');
+      throw ErrorDescription('>>> Не найдена статья в Википедии "$title"');
     }
 
     final pageRequest = WikipediaPageRequest(title: title);
