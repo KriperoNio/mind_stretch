@@ -105,9 +105,11 @@ class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
         final title = await _storageRepository.loadTitleArticle();
 
         if (riddle != null && word != null && title != null) {
-          final article = await _wikipediaRepository.getArticleFromTitle(
-            title: title,
-          );
+          final article = await _wikipediaRepository
+              .getArticleFromTitle(title: title)
+              .onError((e, ee) {
+                return WikiPage();
+              });
           emit(
             DailyContentLoaded(
               riddle: riddle,
@@ -174,7 +176,11 @@ class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
         type: GenerationType.articleTitle,
       );
       _storageRepository.saveTitleArticle(titleArticle: title);
-      article = await _wikipediaRepository.getArticleFromTitle(title: title);
+      article = await _wikipediaRepository
+          .getArticleFromTitle(title: title)
+          .onError((e, ee) {
+            return WikiPage();
+          });
       updated = true;
     }
 

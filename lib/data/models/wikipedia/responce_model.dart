@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
-
-import '../wiki_page.dart';
+import 'package:mind_stretch/data/models/wiki_page.dart';
 
 class WikipediaSearchResponse {
   final List<WikipediaSearchResult> results;

@@ -1,11 +1,10 @@
 import 'dart:math';
 
+import 'package:mind_stretch/data/api/api_client.dart';
+import 'package:mind_stretch/data/models/deepseek/request_model.dart';
+import 'package:mind_stretch/data/models/deepseek/responce_model.dart';
+import 'package:mind_stretch/data/models/riddle.dart';
 import 'package:mind_stretch/logic/repository/remote/deepseek_repository.dart';
-
-import '../../api/api_client.dart';
-import '../../models/deepseek/request_model.dart';
-import '../../models/deepseek/responce_model.dart';
-import '../../models/riddle.dart';
 
 class DeepseekRepositoryImpl implements DeepseekRepository {
   final ApiClient apiClient;
