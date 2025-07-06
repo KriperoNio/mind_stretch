@@ -119,7 +119,7 @@ class _HomePageState extends State<HomePage> {
                     pinned: true,
                     title: Text(
                       maxLines: 2,
-                      state.titleArticle.toString(),
+                      state.titleArticle?.toString() ?? '',
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
@@ -127,7 +127,7 @@ class _HomePageState extends State<HomePage> {
                   SliverPadding(
                     padding: const EdgeInsets.all(16.0),
                     sliver: SliverToBoxAdapter(
-                      child: FormattedText(state.article!.extract.toString()),
+                      child: FormattedText(state.article?.extract.toString() ?? ''),
                     ),
                   ),
                 ],
