@@ -12,7 +12,19 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  bool isAnswerVisible = false;
+  late final ScrollController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,134 +39,50 @@ class _HomePageState extends State<HomePage> {
             appBar: AppBar(
               actions: [
                 IconButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SettingsPage(),
-                    ),
-                  ),
+                  onPressed: goSettings,
                   icon: const Icon(Icons.settings),
                 ),
               ],
             ),
             body: SafeArea(
               bottom: false,
-              child: CustomScrollView(
-                slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.all(16),
-                    sliver: SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: CustomScrollView(
+                  controller: _controller,
+                  slivers: [
+                    const SliverAppBar(title: Center(child: Text('Загадка'))),
+                    SliverToBoxAdapter(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: Text(
-                              'Загадка',
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Center(child: Text(state.riddle!.riddle.toString())),
-                          const SizedBox(height: 16),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                isAnswerVisible = !isAnswerVisible;
-                              });
-                            },
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(),
-                              ),
-                              child: Column(
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text('Ответ'),
-                                      Icon(
-                                        isAnswerVisible
-                                            ? Icons.keyboard_arrow_up
-                                            : Icons.keyboard_arrow_down,
-                                      ),
-                                    ],
-                                  ),
-                                  if (isAnswerVisible) ...[
-                                    const SizedBox(height: 8),
-                                    Text(state.riddle!.answer.toString()),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [Text(state.riddle?.riddle ?? '')],
                       ),
                     ),
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.all(16),
-                    sliver: SliverToBoxAdapter(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Center(
-                            child: Text(
-                              'Слово',
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Center(child: FormattedText(state.word.toString())),
-                        ],
-                      ),
+                    const SliverAppBar(title: Center(child: Text('Слово'))),
+                    SliverToBoxAdapter(child: FormattedText(state.word ?? '')),
+                    SliverAppBar(
+                      title: Center(child: Text(state.titleArticle ?? '')),
+                      pinned: true,
                     ),
-                  ),
-                  SliverAppBar(
-                    pinned: true,
-                    title: Text(
-                      maxLines: 2,
-                      state.titleArticle?.toString() ?? '',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                    SliverToBoxAdapter(
+                      child: FormattedText(state.article?.extract ?? ''),
                     ),
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.all(16.0),
-                    sliver: SliverToBoxAdapter(
-                      child: FormattedText(state.article?.extract.toString() ?? ''),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );
         } else {
-          return Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Ошибка загрузки\n${(state as DailyContentError).message}',
-                  ),
-                  ElevatedButton(
-                    onPressed: () => context.read<DailyContentBloc>().add(
-                      DailyContentForceReset(),
-                    ),
-                    child: Icon(Icons.replay_rounded),
-                  ),
-                ],
-              ),
-            ),
-          );
+          return Placeholder();
         }
       },
+    );
+  }
+
+  void goSettings() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SettingsPage()),
     );
   }
 }

@@ -153,6 +153,7 @@ class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
     if (isNewDay) {
       try {
         await _generateAndSaveContent(emit, reGenerate: true);
+        _storageRepository.setCurrentDate(currentDate);
       } catch (e) {
         emit(DailyContentError('Ошибка: $e'));
       }
@@ -164,23 +165,29 @@ class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
 
         final titleArticle = await _storageRepository.loadTitleArticle();
 
-        if (riddle != null && word != null && titleArticle != null) {
-          final article = await _wikipediaRepository
-              .getArticleFromTitle(title: titleArticle)
-              .onError((e, ee) {
-                return WikiPage();
-              });
-          emit(
-            DailyContentLoaded(
-              riddle: riddle,
-              word: word,
-              article: article,
-              titleArticle: titleArticle,
-            ),
-          );
-        } else {
-          add(DailyContentRefresh());
+        WikiPage? article;
+        if (titleArticle != null) {
+          try {
+            article = await _wikipediaRepository.getArticleFromTitle(
+              title: titleArticle,
+            );
+          } catch (e) {
+            article = null;
+            debugPrint('>>> Ошибка при генерации статьи: $e');
+          }
         }
+        if (article == null && titleArticle == null) {
+          emit(DailyContentError('Ошибка при получении статьи.'));
+          await Future.delayed(Duration(seconds: 5));
+        }
+        emit(
+          DailyContentLoaded(
+            riddle: riddle,
+            word: word,
+            titleArticle: titleArticle,
+            article: article,
+          ),
+        );
       } catch (e) {
         emit(DailyContentError('$e'));
       }
