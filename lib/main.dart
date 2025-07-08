@@ -34,22 +34,17 @@ class MindStretch extends StatelessWidget {
       value: const SystemUiOverlayStyle(
         systemNavigationBarColor: Colors.transparent,
       ),
-      child: MaterialApp(
-        title: 'Mind Stretch',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        home: BlocProvider(
-          create: (_) => DailyContentBloc(
-            storageRepository: StorageRepositoryImpl(prefs: prefs),
-            deepseekRepository: DeepseekRepositoryImpl(apiClient: apiClient),
-            wikipediaRepository: WikipediaRepositoryImpl(apiClient: apiClient),
-          )..add(DailyContentCheckAndLoad()),
-          child: MaterialApp(
-            title: 'Mind Stretch',
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            home: const HomePage(),
-          ),
+      child: BlocProvider(
+        create: (_) => DailyContentBloc(
+          storageRepository: StorageRepositoryImpl(prefs: prefs),
+          deepseekRepository: DeepseekRepositoryImpl(apiClient: apiClient),
+          wikipediaRepository: WikipediaRepositoryImpl(apiClient: apiClient),
+        )..add(DailyContentCheckAndLoad()),
+        child: MaterialApp(
+          title: 'Mind Stretch',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          home: const HomePage(),
         ),
       ),
     );

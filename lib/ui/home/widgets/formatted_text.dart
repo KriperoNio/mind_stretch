@@ -7,7 +7,7 @@ class FormattedText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RichText(text: _buildTextSpan(text, context));
+    return RepaintBoundary(child: RichText(text: _buildTextSpan(text, context)));
   }
 
   TextSpan _buildTextSpan(String text, BuildContext context) {

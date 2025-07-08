@@ -16,7 +16,7 @@ class AppTheme {
       brightness: Brightness.light,
       scaffoldBackgroundColor: Colors.lime.shade100,
 
-      textTheme: TextTheme(bodyMedium: TextStyle(fontSize: 16), displaySmall: TextStyle(color: Colors.red)),
+      textTheme: TextTheme(bodyMedium: TextStyle(fontSize: 16)),
 
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.lime.shade100,
