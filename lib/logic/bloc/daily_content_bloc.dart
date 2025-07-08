@@ -124,7 +124,11 @@ class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
 
     if (riddle != null && word != null) {
       if (article == null && titleArticle == null) {
-        emit(DailyContentError('Ошибка при получении статьи.'));
+        emit(
+          DailyContentError(
+            'Ошибка при получении статьи из сгенерированного контента.',
+          ),
+        );
         await Future.delayed(Duration(seconds: 5));
       }
       emit(
@@ -177,7 +181,11 @@ class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
           }
         }
         if (article == null && titleArticle == null) {
-          emit(DailyContentError('Ошибка при получении статьи.'));
+          emit(
+            DailyContentError(
+              'Ошибка при получении статьи из загруженного контента.',
+            ),
+          );
           await Future.delayed(Duration(seconds: 5));
         }
         emit(
@@ -188,6 +196,17 @@ class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
             article: article,
           ),
         );
+        if (riddle == null || word == null) {
+          emit(
+            DailyContentError(
+              'Ошибка при получении загруженного контента.'
+              '\nЗагадка: $riddle\nСлово: ${word?.substring(1)}'
+              '\nЗаголовок поиска: $titleArticle\nСатья: '
+              '${article?.extract?.substring(4)}',
+            ),
+          );
+          await _generateAndSaveContent(emit);
+        }
       } catch (e) {
         emit(DailyContentError('$e'));
       }
@@ -202,7 +221,7 @@ class DailyContentBloc extends Bloc<DailyContentEvent, DailyContentState> {
     _storageRepository.resetAll();
 
     // Загружаем новый контент
-    add(DailyContentCheckAndLoad());
+    await _generateAndSaveContent(emit, reGenerate: true);
   }
 
   Future<void> _onRefresh(

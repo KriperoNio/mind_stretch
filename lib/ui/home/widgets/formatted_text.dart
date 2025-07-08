@@ -5,12 +5,44 @@ class FormattedText extends StatelessWidget {
 
   const FormattedText(this.text, {super.key});
 
+  static final _cache = <String, TextSpan>{};
+
   @override
   Widget build(BuildContext context) {
-    return RepaintBoundary(child: RichText(text: _buildTextSpan(text, context)));
+    final defaultTextStyle = Theme.of(context).textTheme.bodyMedium!.copyWith(
+      color: Theme.of(
+        context,
+      ).textTheme.bodyMedium!.color!.withValues(alpha: 0.9),
+    );
+
+    final boldTextStyle = defaultTextStyle.copyWith(
+      fontWeight: FontWeight.bold,
+    );
+    final italicTextStyle = defaultTextStyle.copyWith(
+      fontStyle: FontStyle.italic,
+    );
+
+    final span = _cache[text] ??= _buildTextSpan(
+      text,
+      defaultTextStyle: defaultTextStyle,
+      boldTextStyle: boldTextStyle,
+      italicTextStyle: italicTextStyle,
+    );
+
+    return RepaintBoundary(
+      child: RichText(
+        text: span,
+        textAlign: TextAlign.start,
+      ),
+    );
   }
 
-  TextSpan _buildTextSpan(String text, BuildContext context) {
+  TextSpan _buildTextSpan(
+    String text, {
+    required TextStyle defaultTextStyle,
+    required TextStyle boldTextStyle,
+    required TextStyle italicTextStyle,
+  }) {
     final lines = text.split('\n');
     final spans = <TextSpan>[];
 
@@ -20,25 +52,30 @@ class FormattedText extends StatelessWidget {
         continue;
       }
 
-      spans.add(_processLine(line, context));
+      spans.add(
+        _processLine(
+          line,
+          defaultTextStyle: defaultTextStyle,
+          italicTextStyle: italicTextStyle,
+          boldTextStyle: boldTextStyle,
+        ),
+      );
       spans.add(const TextSpan(text: '\n'));
     }
 
-    return TextSpan(children: spans);
+    return TextSpan(children: spans, style: defaultTextStyle);
   }
 
-  TextSpan _processLine(String line, BuildContext context) {
-    final pattern = RegExp(r'(\*\*[^*]+\*\*|\*[^*]+\*|_.+_|`[^`]+`)');
+  TextSpan _processLine(
+    String line, {
+    required TextStyle defaultTextStyle,
+    required TextStyle boldTextStyle,
+    required TextStyle italicTextStyle,
+  }) {
+    final pattern = RegExp(r'(\*\*[^*]+\*\*|\*[^*]+\*|_.+_)');
     final matches = pattern.allMatches(line);
     if (matches.isEmpty) {
-      return TextSpan(
-        text: line,
-        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-          color: Theme.of(
-            context,
-          ).textTheme.bodyMedium!.color!.withValues(alpha: 0.9),
-        ),
-      );
+      return TextSpan(text: line);
     }
 
     final spans = <TextSpan>[];
@@ -56,39 +93,11 @@ class FormattedText extends StatelessWidget {
 
       if (matchedText.startsWith('**')) {
         spans.add(
-          TextSpan(
-            text: content.replaceAll('*', ''),
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.bold),
-          ),
+          TextSpan(text: content.replaceAll('*', ''), style: boldTextStyle),
         );
-      } else if (matchedText.startsWith('*')) {
-        spans.add(
-          TextSpan(
-            text: content,
-            style: const TextStyle(fontStyle: FontStyle.italic),
-          ),
-        );
-      } else if (matchedText.startsWith('_')) {
-        spans.add(
-          TextSpan(
-            text: content,
-            style: const TextStyle(fontStyle: FontStyle.italic),
-          ),
-        );
-      } else if (matchedText.startsWith('`')) {
-        spans.add(
-          TextSpan(
-            text: content,
-            style: TextStyle(
-              fontFamily: 'monospace',
-              backgroundColor: Colors.grey[400],
-            ),
-          ),
-        );
+      } else if (matchedText.startsWith('*') || matchedText.startsWith('_')) {
+        spans.add(TextSpan(text: content, style: italicTextStyle));
       }
-
       lastEnd = match.end;
     }
 
@@ -97,13 +106,6 @@ class FormattedText extends StatelessWidget {
       spans.add(TextSpan(text: line.substring(lastEnd)));
     }
 
-    return TextSpan(
-      children: spans,
-      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-        color: Theme.of(
-          context,
-        ).textTheme.bodyMedium!.color!.withValues(alpha: 0.9),
-      ),
-    );
+    return TextSpan(children: spans);
   }
 }

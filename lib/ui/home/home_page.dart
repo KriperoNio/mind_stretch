@@ -31,45 +31,59 @@ class HomePage extends StatelessWidget {
                 } else if (state is DailyContentLoaded) {
                   return CustomScrollView(
                     slivers: [
-                      SliverToBoxAdapter(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'Загадка',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 32,
-                              ),
+                      // Антипаттерн в CustomScrollView использовать SliverToBoxAdapter + Column, для этого есть:
+                      SliverList(
+                        delegate: SliverChildListDelegate.fixed([
+                          const Text(
+                            'Загадка',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 32,
                             ),
-                            FormattedText(state.riddle?.riddle ?? ''),
-                          ],
-                        ),
+                          ),
+                          Text(state.riddle?.riddle ?? ''),
+                        ], addSemanticIndexes: false),
                       ),
-                      SliverToBoxAdapter(
-                        child: Column(
-                          children: [
-                            const Center(
-                              child: Text(
-                                'Слово',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 32,
-                                ),
-                              ),
+                      SliverList(
+                        delegate: SliverChildListDelegate.fixed([
+                          const SizedBox(height: 32),
+                          const Text(
+                            'Слово',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 32,
                             ),
-                            FormattedText(state.word ?? ''),
-                          ],
-                        ),
+                          ),
+                          FormattedText(state.word ?? ''),
+                        ]),
                       ),
                       SliverAppBar(
-                        title: Text(state.titleArticle ?? ''),
                         pinned: true,
+                        title: Text(
+                          state.titleArticle ?? '',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        centerTitle: false,
                       ),
                       SliverToBoxAdapter(
-                        child: FormattedText(state.article?.extract ?? ''),
+                        child: Text(state.article?.extract ?? ''),
                       ),
                     ],
+                  );
+                } else if (state is DailyContentError) {
+                  return Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(state.message),
+                          const SizedBox(height: 50),
+                          CircularProgressIndicator(),
+                        ],
+                      ),
+                    ),
                   );
                 } else {
                   return Placeholder();

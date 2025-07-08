@@ -41,6 +41,7 @@ class MindStretch extends StatelessWidget {
           wikipediaRepository: WikipediaRepositoryImpl(apiClient: apiClient),
         )..add(DailyContentCheckAndLoad()),
         child: MaterialApp(
+          showPerformanceOverlay: true,
           title: 'Mind Stretch',
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,

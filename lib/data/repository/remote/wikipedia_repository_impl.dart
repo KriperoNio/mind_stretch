@@ -27,7 +27,7 @@ class WikipediaRepositoryImpl implements WikipediaRepository {
 
     if (searchResults.isEmpty) {
       return Future.error(
-        ErrorDescription('>>> Не найдена статья в Википедии "$title"'),
+        ErrorDescription('Не найдена статья в Википедии "$title"'),
       );
     }
 
