@@ -12,7 +12,7 @@ class DeepseekRepositoryImpl implements DeepseekRepository {
   const DeepseekRepositoryImpl({required this.apiClient});
 
   @override
-  /// Генерирует запрос для deepseek в зависимости от type-а 
+  /// Генерирует запрос для deepseek в зависимости от type-а
   /// нужного результата.
   Future<T> generate<T>({required GenerationType type}) async {
     final systemMessage = _getSystemMessage(type);
@@ -20,10 +20,14 @@ class DeepseekRepositoryImpl implements DeepseekRepository {
     return _parseResponse<T>(response, type);
   }
 
-  String _getSystemMessage(GenerationType type) {
+  String _getSystemMessage(
+    GenerationType type, {
+    String specificTopic = 'none',
+  }) {
     switch (type) {
       case GenerationType.riddle:
         return 'Generate 1 perfect Russian riddle with:\n'
+            '- On the topic: $specificTopic\n'
             '- Strict rhyme scheme (AABB or ABAB)\n'
             '- Correct grammar cases\n'
             '- Natural poetic meter (8-10 syllables per line)\n'
@@ -39,6 +43,7 @@ class DeepseekRepositoryImpl implements DeepseekRepository {
             "Сидит дед, во сто шуб одет.\nAnswer: лук";
       case GenerationType.word:
         return 'Provide 1 rare Russian word with:\n'
+            '- On the topic: $specificTopic\n'
             '1. Exact meaning\n'
             '2. Etymology (origin)\n'
             '3. Usage example\n\n'
@@ -49,6 +54,7 @@ class DeepseekRepositoryImpl implements DeepseekRepository {
             '- Example: "Чертоги царей поражали роскошью"';
       case GenerationType.articleTitle:
         return 'Find an interesting Wikipedia article.'
+            '- On the topic: $specificTopic\n'
             'Just write the name. Nothing superfluous.'
             'Text without formatting (as you usually do in github format).'
             'Write it in Russian without parentheses.Example:\n'
@@ -56,15 +62,31 @@ class DeepseekRepositoryImpl implements DeepseekRepository {
     }
   }
 
-  Future<ChatCompletionResponse> _makeApiRequest(String systemMessage) async {
+  /// Для генерации разных ответов.
+  static String get _generateSeed {
+    final random = Random.secure();
+    final values = List.generate(6, (_) => random.nextInt(36)); // 0-9 + A-Z
+    return values
+        .map((n) => n < 10 ? n.toString() : String.fromCharCode(55 + n))
+        .join();
+  }
+
+  /// [temperature] - Sampling temperature between 0 and 2
+  ///
+  /// [maxTokens] - Maximum number of tokens to generate (1-8192)
+  Future<ChatCompletionResponse> _makeApiRequest(
+    String systemMessage, {
+    double? temperature,
+    int? maxTokens,
+  }) async {
     final response = await apiClient.deepseekDio.post(
       '/chat/completions',
       data: RequestModel(
-        temperature: 1.0,
-        maxTokens: 200,
+        temperature: temperature,
+        maxTokens: maxTokens,
         messages: [
           Message.system(systemMessage),
-          Message.user('#${Random().nextInt(1000)} Gen'),
+          Message.user('Generate by seed #$_generateSeed'),
         ],
       ).toJson(),
     );

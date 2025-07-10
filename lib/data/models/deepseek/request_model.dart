@@ -18,8 +18,8 @@ class RequestModel {
     required this.messages,
     this.model = 'deepseek-chat',
     this.stream = false,
-    this.temperature = 0.9, // Креативность
-    this.maxTokens = 150,
+    this.temperature = 1, // Креативность
+    this.maxTokens = 200,
   });
 
   Map<String, dynamic> toJson() {

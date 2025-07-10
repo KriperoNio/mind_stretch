@@ -9,13 +9,19 @@ abstract class StorageRepository {
 
   Future<void> saveRiddle({required String riddle});
 
+  Future<void> resetRiddle();
+
   Future<String?> loadWord();
 
   Future<void> saveWord({required String word});
+
+  Future<void> resetWord();
 
   Future<String?> loadTitleArticle();
 
   Future<void> saveTitleArticle({required String titleArticle});
 
-  Future<void> resetAll();
+  Future<void> resetTitleArticle();
+
+  Future<void> resetContent();
 }

@@ -1,47 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mind_stretch/logic/bloc/daily_content_bloc.dart';
+import 'package:mind_stretch/controller/content_controller.dart';
+import 'package:mind_stretch/logic/scopes/control_content_scope.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
   @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  void _handleRefresh() {
+    context.read<ContentController>().refreshContent(
+      onComplete: () {
+        if (!mounted) return;
+        Navigator.pop(context);
+      },
+      onError: (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
+      },
+    );
+  }
+
+  void _handleReset() {
+    context.read<ContentController>().resetContent(
+      onComplete: () {
+        if (!mounted) return;
+        Navigator.pop(context);
+      },
+      onError: (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    void reset() {
-      // Закрыть настройки
-      Navigator.pop(context);
-
-      // Отправить ивент на сброс
-      context.read<DailyContentBloc>().add(DailyContentForceReset());
-    }
-
-    void refresh() {
-      // Закрыть настройки
-      Navigator.pop(context);
-
-      // Отправить ивент на сброс
-      context.read<DailyContentBloc>().add(DailyContentRefresh());
-    }
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Настройки')),
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
+    return ControlContentScope(
+      child: Scaffold(
+        appBar: AppBar(),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
+              ElevatedButton(onPressed: _handleRefresh, child: Text('Refresh')),
               const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: reset,
-                label: const Center(child: Text('Сброс данных')),
-                icon: const Icon(Icons.clear_all_rounded),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: refresh,
-                label: const Center(child: Text('Обновление данных')),
-                icon: const Icon(Icons.refresh_sharp),
-              ),
+              ElevatedButton(onPressed: _handleReset, child: Text('Reset')),
             ],
           ),
         ),
