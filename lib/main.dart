@@ -25,8 +25,8 @@ class MindStretch extends StatelessWidget {
       ),
       child: MaterialApp(
         title: 'Mind Stretch',
+        themeMode: ThemeMode.light,
         theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
         home: const HomePage(),
       ),
     );

@@ -12,46 +12,42 @@ class RiddleView extends StatelessWidget {
         BlocBuilder<RiddleCubit, RiddleState>(
           buildWhen: (oldState, newState) => oldState != newState,
           builder: (content, state) {
-            if (state is RiddleLoading) {
-              return const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Center(child: CircularProgressIndicator()),
-              );
-            } else if (state is RiddleLoaded) {
-              return Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Загадка',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 32,
+            switch (state) {
+              case RiddleInitial() || RiddleLoading():
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              case RiddleLoaded():
+                return Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Загадка',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 32,
+                          ),
+                          softWrap: true,
                         ),
-                        softWrap: true,
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          content.read<RiddleCubit>().refresh();
-                        },
-                        icon: Icon(Icons.refresh),
-                      ),
-                    ],
-                  ),
-                  RepaintBoundary(child: Text(state.riddle?.riddle ?? '')),
-                ],
-              );
-            } else if (state is RiddleError) {
-              return Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Center(child: Text(state.message)),
-              );
-            } else {
-              return const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Center(child: Text('ОЙ!')),
-              );
+                        IconButton(
+                          onPressed: () {
+                            content.read<RiddleCubit>().refresh();
+                          },
+                          icon: Icon(Icons.refresh),
+                        ),
+                      ],
+                    ),
+                    RepaintBoundary(child: Text(state.riddle?.riddle ?? '')),
+                  ],
+                );
+              case RiddleError():
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Center(child: Text(state.message)),
+                );
             }
           },
         ),

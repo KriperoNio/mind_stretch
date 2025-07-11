@@ -11,49 +11,54 @@ class ArticleView extends StatelessWidget {
       child: BlocBuilder<ArticleCubit, ArticleState>(
         buildWhen: (old, next) => old != next,
         builder: (context, state) {
-          if (state is ArticleLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (state is ArticleLoaded) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Не замарачиваюсь со Stack!
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        state.title ?? '',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 32,
+          switch (state) {
+            case ArticleInitial() || ArticleLoading():
+              return const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            case ArticleLoaded():
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Не замарачиваюсь со Stack!
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          state.title ?? '',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 32,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          softWrap: true,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        softWrap: true,
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      onPressed: () => context.read<ArticleCubit>().refresh(),
-                      icon: const Icon(Icons.refresh),
-                      constraints: const BoxConstraints(),
-                      padding: EdgeInsets.zero,
-                    ),
-                  ],
-                ),
-                RepaintBoundary(
-                  child: Text(
-                    state.article?.extract ?? '',
-                    style: const TextStyle(fontSize: 16),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        onPressed: () => context.read<ArticleCubit>().refresh(),
+                        icon: const Icon(Icons.refresh),
+                        constraints: const BoxConstraints(),
+                        padding: EdgeInsets.zero,
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            );
-          } else if (state is ArticleError) {
-            return Center(child: Text(state.message));
-          } else {
-            return const Center(child: Text('ОЙ!'));
+                  RepaintBoundary(
+                    child: Text(
+                      state.article?.extract ?? '',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ],
+              );
+            case ArticleError():
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Center(child: Text(state.message)),
+              );
           }
         },
       ),

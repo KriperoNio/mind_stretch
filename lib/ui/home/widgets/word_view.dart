@@ -13,45 +13,41 @@ class WordView extends StatelessWidget {
         BlocBuilder<WordCubit, WordState>(
           buildWhen: (oldState, newState) => oldState != newState,
           builder: (content, state) {
-            if (state is WordLoading) {
-              return const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Center(child: CircularProgressIndicator()),
-              );
-            } else if (state is WordLoaded) {
-              return Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Слово',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 32,
+            switch (state) {
+              case WordInitial() || WordLoading():
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              case WordLoaded():
+                return Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Слово',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 32,
+                          ),
                         ),
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          content.read<WordCubit>().refresh();
-                        },
-                        icon: Icon(Icons.refresh),
-                      ),
-                    ],
-                  ),
-                  RepaintBoundary(child: FormattedText(state.word ?? '')),
-                ],
-              );
-            } else if (state is WordError) {
-              return Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Center(child: Text(state.message)),
-              );
-            } else {
-              return const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Center(child: Text('ОЙ!')),
-              );
+                        IconButton(
+                          onPressed: () {
+                            content.read<WordCubit>().refresh();
+                          },
+                          icon: Icon(Icons.refresh),
+                        ),
+                      ],
+                    ),
+                    RepaintBoundary(child: FormattedText(state.word ?? '')),
+                  ],
+                );
+              case WordError():
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Center(child: Text(state.message)),
+                );
             }
           },
         ),

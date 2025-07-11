@@ -7,19 +7,18 @@ class AppTheme {
 
   static ThemeData get lightTheme {
     return ThemeData(
-      primaryColor: Colors.lime.shade100,
+      primaryColor: Color(0xFFFCE5B9),
       colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.lime.shade100,
+        seedColor: Color(0xFFFCE5B9),
         brightness: Brightness.light,
-        
       ),
       brightness: Brightness.light,
-      scaffoldBackgroundColor: Colors.lime.shade100,
+      scaffoldBackgroundColor: Color(0xFFFCE5B9),
 
       textTheme: TextTheme(bodyMedium: TextStyle(fontSize: 16)),
 
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.lime.shade100,
+        backgroundColor: Color(0xFFFCE5B9),
         surfaceTintColor: Colors.transparent,
         titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 32),
       ),
@@ -30,41 +29,6 @@ class AppTheme {
             borderRadius: BorderRadius.circular(12),
           ),
           minimumSize: Size.fromHeight(60),
-          textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-          iconSize: 32,
-        ),
-      ),
-
-      iconButtonTheme: IconButtonThemeData(
-        style: IconButton.styleFrom(iconSize: 32),
-      ),
-    );
-  }
-
-  static ThemeData get darkTheme {
-    return ThemeData(
-      primaryColor: Colors.blueGrey.shade800,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.blueGrey.shade800,
-        brightness: Brightness.dark,
-      ),
-      brightness: Brightness.dark,
-      scaffoldBackgroundColor: Colors.blueGrey.shade800,
-
-      textTheme: TextTheme(bodyMedium: TextStyle(fontSize: 16)),
-
-      appBarTheme: AppBarTheme(
-        backgroundColor: Colors.blueGrey.shade800,
-        surfaceTintColor: Colors.transparent,
-        titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-      ),
-
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          minimumSize: Size.fromHeight(48),
           textStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
           iconSize: 32,
         ),
