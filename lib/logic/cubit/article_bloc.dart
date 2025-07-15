@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mind_stretch/data/models/wiki_page.dart';
+import 'package:mind_stretch/data/repository/local/storage_repository_impl.dart';
 import 'package:mind_stretch/logic/repository/local/storage_repository.dart';
 import 'package:mind_stretch/logic/repository/remote/deepseek_repository.dart';
 import 'package:mind_stretch/logic/repository/remote/wikipedia_repository.dart';
@@ -23,14 +24,16 @@ class ArticleCubit extends Cubit<ArticleState> {
   Future<void> load({bool force = false}) async {
     emit(ArticleLoading());
 
-    String? title = force ? null : await _storage.loadTitleArticle();
+    String? title = force
+        ? null
+        : await _storage.load(StorageContentKey.titleArticle.key);
 
     if (title == null) {
       try {
         title = await _deepseek.generate<String>(
           type: GenerationType.articleTitle,
         );
-        await _storage.saveTitleArticle(titleArticle: title);
+        await _storage.save(StorageContentKey.titleArticle.key, title);
       } catch (e) {
         emit(ArticleError('Ошибка при генерации заголовка: $e'));
         return;
@@ -57,7 +60,7 @@ class ArticleCubit extends Cubit<ArticleState> {
         title = await _deepseek.generate<String>(
           type: GenerationType.articleTitle,
         );
-        await _storage.saveTitleArticle(titleArticle: title);
+        await _storage.save(StorageContentKey.titleArticle.key, title);
       } catch (e) {
         emit(ArticleError('Ошибка при генерации заголовка: $e'));
         return;
@@ -80,7 +83,7 @@ class ArticleCubit extends Cubit<ArticleState> {
   }
 
   Future<void> resetAndLoad() async {
-    await _storage.resetTitleArticle();
+    await _storage.reset(StorageContentKey.titleArticle.key);
     await load(force: true);
   }
 }

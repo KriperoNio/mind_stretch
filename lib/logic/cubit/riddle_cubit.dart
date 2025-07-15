@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mind_stretch/data/models/riddle.dart';
+import 'package:mind_stretch/data/repository/local/storage_repository_impl.dart';
 import 'package:mind_stretch/logic/repository/local/storage_repository.dart';
 import 'package:mind_stretch/logic/repository/remote/deepseek_repository.dart';
 
@@ -20,9 +21,9 @@ class RiddleCubit extends Cubit<RiddleState> {
     emit(RiddleLoading());
 
     if (!force) {
-      final riddle = await _storage.loadRiddle();
+      final riddle = await _storage.load(StorageContentKey.riddle.key);
       if (riddle != null) {
-        emit(RiddleLoaded(riddle: riddle));
+        emit(RiddleLoaded(riddle: Riddle.fromString(riddle)));
         return;
       }
     }
@@ -31,7 +32,7 @@ class RiddleCubit extends Cubit<RiddleState> {
       final riddle = await _deepseek.generate<Riddle>(
         type: GenerationType.riddle,
       );
-      await _storage.saveRiddle(riddle: riddle.toString());
+      await _storage.save(StorageContentKey.riddle.key, riddle.toString());
       emit(RiddleLoaded(riddle: riddle));
     } catch (e) {
       emit(RiddleError('Ошибка при генерации загадки: $e'));
@@ -49,7 +50,7 @@ class RiddleCubit extends Cubit<RiddleState> {
         final riddle = await _deepseek.generate<Riddle>(
           type: GenerationType.riddle,
         );
-        await _storage.saveRiddle(riddle: riddle.toString());
+        await _storage.save(StorageContentKey.riddle.key, riddle.toString());
         emit(RiddleLoaded(riddle: riddle));
       } catch (e) {
         emit(RiddleError('Ошибка при обновлении загадки: $e'));
@@ -58,7 +59,7 @@ class RiddleCubit extends Cubit<RiddleState> {
   }
 
   Future<void> resetAndLoad() async {
-    await _storage.resetRiddle();
+    await _storage.reset(StorageContentKey.riddle.key);
     await load(force: true);
   }
 }
