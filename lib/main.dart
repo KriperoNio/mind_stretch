@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:mind_stretch/core/theme.dart';
+import 'package:mind_stretch/core/theme/theme.dart';
 import 'package:mind_stretch/logic/scopes/app_scrope.dart';
 import 'package:mind_stretch/ui/home/home_page.dart';
 

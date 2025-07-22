@@ -1,6 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mind_stretch/core/logger/app_logger.dart';
+import 'package:mind_stretch/core/storage/keys/storage_content_key.dart';
+import 'package:mind_stretch/core/storage/sections/storage_content_section.dart';
+import 'package:mind_stretch/data/models/storage/content_with_settings_model.dart';
+import 'package:mind_stretch/data/models/storage/settings_model.dart';
 import 'package:mind_stretch/data/models/wiki_page.dart';
-import 'package:mind_stretch/data/repository/local/storage_repository_impl.dart';
 import 'package:mind_stretch/logic/repository/local/storage_repository.dart';
 import 'package:mind_stretch/logic/repository/remote/deepseek_repository.dart';
 import 'package:mind_stretch/logic/repository/remote/wikipedia_repository.dart';
@@ -24,16 +28,30 @@ class ArticleCubit extends Cubit<ArticleState> {
   Future<void> load({bool force = false}) async {
     emit(ArticleLoading());
 
-    String? title = force
-        ? null
-        : await _storage.load(StorageContentKey.titleArticle.key);
+    ContentWithSettingsModel? model = await _storage.loadModel(
+      StorageContentSection.titleArticle,
+    );
+
+    String? title = force ? null : model?.content;
 
     if (title == null) {
       try {
+        final specificTopic = model?.settings.specificTopic;
+
         title = await _deepseek.generate<String>(
           type: GenerationType.articleTitle,
+          specificTopic: specificTopic,
         );
-        await _storage.save(StorageContentKey.titleArticle.key, title);
+
+        final updatedModel = ContentWithSettingsModel(
+          content: title,
+          settings: model?.settings ?? SettingsModel(),
+        );
+        await _storage.saveModel(
+          StorageContentSection.titleArticle,
+          updatedModel,
+        );
+        model = updatedModel;
       } catch (e) {
         emit(ArticleError('Ошибка при генерации заголовка: $e'));
         return;
@@ -42,48 +60,146 @@ class ArticleCubit extends Cubit<ArticleState> {
 
     try {
       final article = await _wikipedia.getArticleFromTitle(title: title);
-      emit(ArticleLoaded(title: title, article: article));
+      emit(
+        ArticleLoaded(
+          title: title,
+          article: article,
+          settings: model?.settings,
+        ),
+      );
     } catch (e) {
       emit(ArticleError('Ошибка при получении статьи: $e'));
     }
   }
 
   Future<void> refresh() async {
-    final currentState = state is ArticleLoaded
-        ? state as ArticleLoaded
-        : ArticleLoaded();
+    AppLogger.debug('refresh', name: 'article_bloc');
 
-    String? title;
+    final current = state is ArticleLoaded ? state as ArticleLoaded : null;
 
-    if (currentState.title == null) {
+    ContentWithSettingsModel? model = await _storage.loadModel(
+      StorageContentSection.titleArticle,
+    );
+
+    final savedSettings = model?.settings;
+    final savedTitle = model?.content;
+
+    final currentSettings = current?.settings;
+    final currentTitle = current?.title;
+
+    final settingsChanged = savedSettings != currentSettings;
+    final titleChanged = savedTitle != currentTitle;
+    final articleMissing = current?.article == null;
+
+    AppLogger.debug(
+      '>>> Refresh\n'
+      '${'-' * 24}\n'
+      '${savedSettings?.toJson()} | ${currentSettings?.toJson()}\n'
+      '$settingsChanged\n'
+      '${'-' * 24}\n'
+      '$savedTitle | $currentTitle\n'
+      '$titleChanged\n'
+      '${'-' * 24}\n'
+      '$articleMissing\n',
+      name: 'word_bloc\n',
+    );
+
+    if (settingsChanged) {
       try {
-        title = await _deepseek.generate<String>(
+        final specificTopic = savedSettings?.specificTopic;
+
+        final newTitle = await _deepseek.generate<String>(
           type: GenerationType.articleTitle,
+          specificTopic: specificTopic,
         );
-        await _storage.save(StorageContentKey.titleArticle.key, title);
+
+        final updatedModel = ContentWithSettingsModel(
+          content: newTitle,
+          settings: savedSettings ?? SettingsModel(),
+        );
+
+        await _storage.saveModel(
+          StorageContentSection.titleArticle,
+          updatedModel,
+        );
+
+        final article = await _wikipedia.getArticleFromTitle(title: newTitle);
+
+        emit(
+          ArticleLoaded(
+            title: newTitle,
+            article: article,
+            settings: updatedModel.settings,
+          ),
+        );
       } catch (e) {
         emit(ArticleError('Ошибка при генерации заголовка: $e'));
-        return;
       }
-    }
-
-    WikiPage? article;
-
-    if ((currentState.article == null && currentState.title != null) ||
-        title != null) {
+    } else if (titleChanged) {
       try {
-        article = await _wikipedia.getArticleFromTitle(
-          title: title ?? currentState.title!,
+        final article = await _wikipedia.getArticleFromTitle(
+          title: savedTitle!,
         );
-        emit(ArticleLoaded(title: title, article: article));
+
+        emit(
+          ArticleLoaded(
+            title: savedTitle,
+            article: article,
+            settings: savedSettings,
+          ),
+        );
       } catch (e) {
-        emit(ArticleError('Ошибка при обновлении статьи: $e'));
+        emit(ArticleError('Ошибка при загрузке сохранённой статьи: $e'));
+      }
+    } else if (articleMissing && savedTitle != null) {
+      try {
+        final article = await _wikipedia.getArticleFromTitle(title: savedTitle);
+
+        emit(
+          ArticleLoaded(
+            title: savedTitle,
+            article: article,
+            settings: savedSettings,
+          ),
+        );
+      } catch (_) {
+        // Попытка генерации нового заголовка, если сохраненный невалиден
+        try {
+          final specificTopic = savedSettings?.specificTopic;
+
+          final newTitle = await _deepseek.generate<String>(
+            type: GenerationType.articleTitle,
+            specificTopic: specificTopic,
+          );
+
+          final updatedModel = ContentWithSettingsModel(
+            content: newTitle,
+            settings: savedSettings ?? SettingsModel(),
+          );
+
+          await _storage.saveModel(
+            StorageContentSection.titleArticle,
+            updatedModel,
+          );
+
+          final article = await _wikipedia.getArticleFromTitle(title: newTitle);
+
+          emit(
+            ArticleLoaded(
+              title: newTitle,
+              article: article,
+              settings: updatedModel.settings,
+            ),
+          );
+        } catch (e) {
+          emit(ArticleError('Ошибка при восстановлении статьи: $e'));
+        }
       }
     }
   }
 
   Future<void> resetAndLoad() async {
-    await _storage.reset(StorageContentKey.titleArticle.key);
+    await _storage.removeValue(StorageContentSection.titleArticle, StorageContentKey.content);
     await load(force: true);
   }
 }
@@ -97,8 +213,9 @@ class ArticleLoading extends ArticleState {}
 class ArticleLoaded extends ArticleState {
   final String? title;
   final WikiPage? article;
+  final SettingsModel? settings;
 
-  ArticleLoaded({this.title, this.article});
+  ArticleLoaded({this.title, this.article, this.settings});
 }
 
 class ArticleError extends ArticleState {

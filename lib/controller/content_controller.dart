@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mind_stretch/core/storage/keys/storage_content_key.dart';
+import 'package:mind_stretch/core/storage/sections/storage_content_section.dart';
 import 'package:mind_stretch/logic/cubit/article_bloc.dart';
 import 'package:mind_stretch/logic/cubit/riddle_cubit.dart';
 import 'package:mind_stretch/logic/cubit/word_cubit.dart';
+import 'package:mind_stretch/logic/repository/local/storage_repository.dart';
 
-class ContentController extends Cubit<void> {
+class ContentController {
   final ArticleCubit _articleCubit;
   final RiddleCubit _riddleCubit;
   final WordCubit _wordCubit;
 
+  final StorageRepository _storage;
+
   ContentController({
+    required StorageRepository storage,
     required ArticleCubit articleCubit,
     required RiddleCubit riddleCubit,
     required WordCubit wordCubit,
   }) : _articleCubit = articleCubit,
        _riddleCubit = riddleCubit,
        _wordCubit = wordCubit,
-       super(null);
+       _storage = storage;
 
   Future<void> refreshContent({
     VoidCallback? onComplete,
@@ -43,6 +48,33 @@ class ContentController extends Cubit<void> {
         _articleCubit.resetAndLoad(),
         _riddleCubit.resetAndLoad(),
         _wordCubit.resetAndLoad(),
+      ]);
+      onComplete?.call();
+    } catch (e) {
+      onError?.call(e);
+    }
+  }
+
+  Future<void> resetSettings({
+    VoidCallback? onComplete,
+    Function(Object)? onError,
+  }) async {
+    try {
+      await Future.wait([
+        _storage.removeValue(
+          StorageContentSection.titleArticle,
+          StorageContentKey.settings,
+        ),
+
+        _storage.removeValue(
+          StorageContentSection.riddle,
+          StorageContentKey.settings,
+        ),
+
+        _storage.removeValue(
+          StorageContentSection.word,
+          StorageContentKey.settings,
+        ),
       ]);
       onComplete?.call();
     } catch (e) {

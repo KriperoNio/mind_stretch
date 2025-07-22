@@ -33,7 +33,7 @@ class ApiClient {
     );
 
     // Добавляем интерцепторы при необходимости
-    _deepseekDio.interceptors.add(SecureLoggingInterceptor());
+    _deepseekDio.interceptors.add(SecureLoggingInterceptor('deepseek'));
   }
 
   void _configureWikipediaDio() {
@@ -41,7 +41,7 @@ class ApiClient {
       baseUrl: 'https://ru.wikipedia.org/w/api.php',
       headers: {'Content-Type': 'application/json'},
     );
-    _wikipediaDio.interceptors.add(SecureLoggingInterceptor());
+    _wikipediaDio.interceptors.add(SecureLoggingInterceptor('wikipedia'));
   }
 
   Dio get deepseekDio => _deepseekDio;

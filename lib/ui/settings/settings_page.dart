@@ -26,8 +26,23 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _handleReset() {
+  void _handleResetContent() {
     context.read<ContentController>().resetContent(
+      onComplete: () {
+        if (!mounted) return;
+        Navigator.pop(context);
+      },
+      onError: (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
+      },
+    );
+  }
+
+  void _handleResetSettings() {
+    context.read<ContentController>().resetSettings(
       onComplete: () {
         if (!mounted) return;
         Navigator.pop(context);
@@ -49,10 +64,24 @@ class _SettingsPageState extends State<SettingsPage> {
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ElevatedButton(onPressed: _handleRefresh, child: Text('Refresh')),
+              Text(
+                '* Эта кнопка восстановит контент, если он был утерян на телефоне или настройки изменились.\n'
+                'Вы можете обновить конкретный контент вручную, нажав кнопку перезагрузки '
+                'в правом верхнем углу на главном экране.',
+              ),
               const SizedBox(height: 16),
-              ElevatedButton(onPressed: _handleReset, child: Text('Reset')),
+              ElevatedButton(
+                onPressed: _handleResetContent,
+                child: Text('Reset'),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _handleResetSettings,
+                child: Text('Reset Settings'),
+              ),
             ],
           ),
         ),

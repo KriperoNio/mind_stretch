@@ -69,6 +69,9 @@ class _AppScropeState extends State<AppScope> {
         BlocProvider<ArticleCubit>(
           create: (BuildContext context) => articleCubit,
         ),
+        RepositoryProvider<StorageRepository>(
+          create: (context) => storageRepository,
+        ),
       ],
       child: widget.child,
     );

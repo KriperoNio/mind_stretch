@@ -1,5 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mind_stretch/data/repository/local/storage_repository_impl.dart';
+import 'package:mind_stretch/core/logger/app_logger.dart';
+import 'package:mind_stretch/core/storage/keys/storage_content_key.dart';
+import 'package:mind_stretch/core/storage/sections/storage_content_section.dart';
+import 'package:mind_stretch/data/models/storage/content_with_settings_model.dart';
+import 'package:mind_stretch/data/models/storage/settings_model.dart';
 import 'package:mind_stretch/logic/repository/local/storage_repository.dart';
 import 'package:mind_stretch/logic/repository/remote/deepseek_repository.dart';
 
@@ -13,50 +17,117 @@ class WordCubit extends Cubit<WordState> {
   }) : _storage = storage,
        _deepseek = deepseek,
        super(WordInitial()) {
-    if (state is WordInitial) load();
+    load();
   }
 
   Future<void> load({bool force = false}) async {
     emit(WordLoading());
 
-    if (!force) {
-      final word = await _storage.load(StorageContentKey.word.key);
-      if (word != null) {
-        emit(WordLoaded(word: word));
+    ContentWithSettingsModel? model = await _storage.loadModel(
+      StorageContentSection.word,
+    );
+
+    String? content = force ? null : model?.content;
+
+    if (content == null) {
+      try {
+        final specificTopic = model?.settings.specificTopic;
+
+        final word = await _deepseek.generate<String>(
+          type: GenerationType.word,
+          specificTopic: specificTopic,
+        );
+
+        final updatedModel = ContentWithSettingsModel(
+          content: word,
+          settings: model?.settings ?? SettingsModel(),
+        );
+
+        await _storage.saveModel(StorageContentSection.word, updatedModel);
+        model = updatedModel;
+      } catch (e) {
+        emit(WordError('Ошибка при генерации слова: $e'));
         return;
       }
     }
 
-    try {
-      final word = await _deepseek.generate<String>(type: GenerationType.word);
-      await _storage.save(StorageContentKey.word.key, word);
-      emit(WordLoaded(word: word));
-    } catch (e) {
-      emit(WordError('Ошибка при генерации слова: $e'));
-    }
+    emit(WordLoaded(word: model!.content!, settings: model.settings));
   }
 
   Future<void> refresh() async {
-    final currentState = state is WordLoaded
-        ? state as WordLoaded
-        : WordLoaded();
+    final current = state is WordLoaded ? state as WordLoaded : null;
 
-    if (currentState.word == null) {
-      emit(WordLoading());
+    final model = await _storage.loadModel(StorageContentSection.word);
+
+    final savedWord = model?.content;
+    final savedSettings = model?.settings;
+
+    final currentWord = current?.word;
+    final currentSettings = current?.settings;
+
+    final settingsChanged = savedSettings != currentSettings;
+    final wordChanged = savedWord != currentWord;
+
+    AppLogger.debug(
+      '>>> Refresh\n'
+      '${'-' * 24}\n'
+      '${savedSettings?.toJson()} | ${currentSettings?.toJson()}\n'
+      '$settingsChanged\n'
+      '${'-' * 24}\n'
+      '$savedWord | $currentWord\n'
+      '$wordChanged\n',
+      name: 'word_bloc\n',
+    );
+
+    if (settingsChanged) {
       try {
-        final word = await _deepseek.generate<String>(
+        final newWord = await _deepseek.generate<String>(
           type: GenerationType.word,
+          specificTopic: savedSettings?.specificTopic,
         );
-        await _storage.save(StorageContentKey.word.key, word);
-        emit(WordLoaded(word: word));
+
+        final newModel = ContentWithSettingsModel(
+          content: newWord,
+          settings: savedSettings ?? SettingsModel(),
+        );
+
+        await _storage.saveModel(StorageContentSection.word, newModel);
+
+        emit(WordLoaded(word: newWord, settings: newModel.settings));
       } catch (e) {
-        emit(WordError('Ошибка при обновлении слова: $e'));
+        emit(WordError('Ошибка при генерации слова при смене настроек: $e'));
+      }
+    } else if (wordChanged) {
+      try {
+        emit(WordLoaded(word: savedWord, settings: savedSettings));
+      } catch (e) {
+        await resetAndLoad();
+      }
+    } else if (currentWord == null) {
+      try {
+        final newWord = await _deepseek.generate<String>(
+          type: GenerationType.word,
+          specificTopic: savedSettings?.specificTopic,
+        );
+
+        final newModel = ContentWithSettingsModel(
+          content: newWord,
+          settings: savedSettings ?? SettingsModel(),
+        );
+
+        await _storage.saveModel(StorageContentSection.word, newModel);
+        emit(WordLoaded(word: newWord, settings: newModel.settings));
+      } catch (e) {
+        emit(WordError('Ошибка при восстановлении слова: $e'));
       }
     }
   }
 
   Future<void> resetAndLoad() async {
-    await _storage.reset(StorageContentKey.word.key);
+    await _storage.removeValue(
+      StorageContentSection.word,
+      StorageContentKey.content,
+    );
     await load(force: true);
   }
 }
@@ -69,7 +140,9 @@ class WordLoading extends WordState {}
 
 class WordLoaded extends WordState {
   final String? word;
-  WordLoaded({this.word});
+  final SettingsModel? settings;
+
+  WordLoaded({this.word, this.settings});
 }
 
 class WordError extends WordState {

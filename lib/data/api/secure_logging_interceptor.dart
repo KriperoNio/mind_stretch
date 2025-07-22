@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
+import 'package:mind_stretch/core/logger/app_logger.dart';
 
 class SecureLoggingInterceptor extends Interceptor {
+  String debugName;
+  SecureLoggingInterceptor(this.debugName);
+
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    // Маскируем API-ключ в заголовках
     final safeHeaders = Map<String, dynamic>.from(options.headers);
     if (safeHeaders['Authorization'] != null) {
       safeHeaders['Authorization'] = _maskApiKey(
@@ -12,7 +14,6 @@ class SecureLoggingInterceptor extends Interceptor {
       );
     }
 
-    // Маскируем API-ключ в URL (если есть в query параметрах)
     final safeUri = options.uri.toString().contains('api_key=')
         ? options.uri.toString().replaceAllMapped(
             RegExp(r'api_key=([^&]+)'),
@@ -20,41 +21,41 @@ class SecureLoggingInterceptor extends Interceptor {
           )
         : options.uri.toString();
 
-    debugPrint('''
-      >>> Secure Request <<<
-      > URI: $safeUri
-      > Method: ${options.method}
-      > Headers: $safeHeaders
-      > Body: ${options.data}
-    ''');
+    AppLogger.info('''
+>>> Secure Request <<<
+URI: $safeUri
+Method: ${options.method}
+Headers: $safeHeaders
+Body: ${options.data}
+''', name: debugName);
 
     super.onRequest(options, handler);
   }
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
-    debugPrint('''
-        >>> Secure Response <<<
-        > Status: ${response.statusCode}
-        > Data: ${response.data}
-    ''');
+    AppLogger.info('''
+>>> Secure Response <<<
+URI: ${response.requestOptions.uri}
+Status: ${response.statusCode}
+Data: ${response.data}
+''', name: debugName);
     super.onResponse(response, handler);
   }
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    debugPrint('''
-      >>> Secure Error <<<
-      > URI: ${err.requestOptions.uri}
-      > Error: ${err.message}
-      > Status: ${err.response?.statusCode}
-      > Response: ${err.response?.data}
-    ''');
+    AppLogger.error('''
+>>> Secure Error <<<
+URI: ${err.requestOptions.uri}
+Error: ${err.message}
+Status: ${err.response?.statusCode}
+Response: ${err.response?.data}
+''', name: debugName);
     super.onError(err, handler);
   }
 
   String _maskApiKey(String authHeader) {
-    // Маскируем часть ключа после "Bearer "
     if (authHeader.startsWith('Bearer ')) {
       final key = authHeader.substring(7);
       if (key.length > 8) {

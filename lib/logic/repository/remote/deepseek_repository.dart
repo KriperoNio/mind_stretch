@@ -2,7 +2,7 @@ import 'package:mind_stretch/data/models/riddle.dart';
 
 abstract class DeepseekRepository {
   /// Возвращает тип данных в зависимости от [GenerationType]
-  Future<T> generate<T>({required GenerationType type});
+  Future<T> generate<T>({required GenerationType type, String? specificTopic});
 }
 
 /// enum [GenerationType] определяет, какой тип данных нужно сгенерировать,

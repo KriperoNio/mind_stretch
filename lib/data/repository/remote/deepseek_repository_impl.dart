@@ -13,21 +13,23 @@ class DeepseekRepositoryImpl implements DeepseekRepository {
 
   @override
   /// Генерирует запрос для deepseek в зависимости от type-а
-  /// нужного результата.
-  Future<T> generate<T>({required GenerationType type}) async {
-    final systemMessage = _getSystemMessage(type);
+  /// нужного результата и специфики запроса.
+  Future<T> generate<T>({required GenerationType type, String? specificTopic}) async {
+    final systemMessage = _getSystemMessage(type, specificTopic: specificTopic);
     final response = await _makeApiRequest(systemMessage);
     return _parseResponse<T>(response, type);
   }
 
   String _getSystemMessage(
     GenerationType type, {
-    String specificTopic = 'none',
+    String? specificTopic,
   }) {
+    final topicPart = specificTopic != null ? '- On the topic: $specificTopic\n' : '';
+
     switch (type) {
       case GenerationType.riddle:
         return 'Generate 1 perfect Russian riddle with:\n'
-            '- On the topic: $specificTopic\n'
+            '${topicPart.toString()}'
             '- Strict rhyme scheme (AABB or ABAB)\n'
             '- Correct grammar cases\n'
             '- Natural poetic meter (8-10 syllables per line)\n'
@@ -43,7 +45,7 @@ class DeepseekRepositoryImpl implements DeepseekRepository {
             "Сидит дед, во сто шуб одет.\nAnswer: лук";
       case GenerationType.word:
         return 'Provide 1 rare Russian word with:\n'
-            '- On the topic: $specificTopic\n'
+            '${topicPart.toString()}'
             '1. Exact meaning\n'
             '2. Etymology (origin)\n'
             '3. Usage example\n\n'
@@ -54,7 +56,7 @@ class DeepseekRepositoryImpl implements DeepseekRepository {
             '- Example: "Чертоги царей поражали роскошью"';
       case GenerationType.articleTitle:
         return 'Find an interesting Wikipedia article.'
-            '- On the topic: $specificTopic\n'
+            '${topicPart.toString()}'
             'Just write the name. Nothing superfluous.'
             'Text without formatting (as you usually do in github format).'
             'Write it in Russian without parentheses.Example:\n'
