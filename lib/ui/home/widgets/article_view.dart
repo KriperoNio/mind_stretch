@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mind_stretch/logic/cubit/article_bloc.dart';
+import 'package:mind_stretch/logic/cubit/article_cubit.dart';
 
 class ArticleView extends StatelessWidget {
   const ArticleView({super.key});

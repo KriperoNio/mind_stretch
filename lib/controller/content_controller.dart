@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mind_stretch/core/storage/keys/settings_key.dart';
 import 'package:mind_stretch/core/storage/keys/storage_content_key.dart';
 import 'package:mind_stretch/core/storage/sections/storage_content_section.dart';
-import 'package:mind_stretch/logic/cubit/article_bloc.dart';
+import 'package:mind_stretch/logic/cubit/article_cubit.dart';
 import 'package:mind_stretch/logic/cubit/riddle_cubit.dart';
 import 'package:mind_stretch/logic/cubit/word_cubit.dart';
 import 'package:mind_stretch/logic/repository/local/storage_repository.dart';
@@ -80,5 +81,17 @@ class ContentController {
     } catch (e) {
       onError?.call(e);
     }
+  }
+
+  Future<String> loadSetting(SettingsKey key) async {
+    final result = await _storage.getValue(
+      key.section,
+      StorageContentKey.settings,
+    );
+    return result ?? '';
+  }
+
+  Future<void> saveSetting(SettingsKey key, String value) async {
+    await _storage.setValue(key.section, StorageContentKey.settings, value);
   }
 }

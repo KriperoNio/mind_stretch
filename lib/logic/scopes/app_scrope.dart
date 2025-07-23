@@ -6,7 +6,7 @@ import 'package:mind_stretch/data/repository/remote/deepseek_repository_impl.dar
 import 'package:mind_stretch/data/repository/remote/wikipedia_repository_impl.dart';
 import 'package:mind_stretch/logic/cubit/word_cubit.dart';
 import 'package:mind_stretch/logic/cubit/riddle_cubit.dart';
-import 'package:mind_stretch/logic/cubit/article_bloc.dart';
+import 'package:mind_stretch/logic/cubit/article_cubit.dart';
 import 'package:mind_stretch/logic/repository/local/storage_repository.dart';
 import 'package:mind_stretch/logic/repository/remote/deepseek_repository.dart';
 import 'package:mind_stretch/logic/repository/remote/wikipedia_repository.dart';

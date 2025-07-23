@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mind_stretch/controller/content_controller.dart';
-import 'package:mind_stretch/logic/cubit/article_bloc.dart';
+import 'package:mind_stretch/logic/cubit/article_cubit.dart';
 import 'package:mind_stretch/logic/cubit/riddle_cubit.dart';
 import 'package:mind_stretch/logic/cubit/word_cubit.dart';
 import 'package:mind_stretch/logic/repository/local/storage_repository.dart';
