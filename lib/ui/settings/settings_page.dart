@@ -1,53 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mind_stretch/controller/content_controller.dart';
+import 'package:mind_stretch/core/logger/app_logger.dart';
 import 'package:mind_stretch/logic/cubit/settings_cubit.dart';
-import 'package:mind_stretch/logic/scopes/control_content_scope.dart';
 import 'package:mind_stretch/ui/settings/widgets/editable_field.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ControlContentScope(
-      child: BlocProvider(
-        create: (_) =>
-            SettingsCubit(contentController: context.read<ContentController>()),
-        child: const _SettingsView(),
-      ),
-    );
-  }
-}
-
-class _SettingsView extends StatefulWidget {
-  const _SettingsView();
-
-  @override
-  State<_SettingsView> createState() => _SettingsViewState();
-}
-
-class _SettingsViewState extends State<_SettingsView> {
-  final _articleSettingsController = TextEditingController();
-  final _riddleSettingsController = TextEditingController();
-  final _wordSettingsController = TextEditingController();
-
-  bool _fieldArticleEditable = false;
-  bool _fieldRiddleEditable = false;
-  bool _fieldWordEditable = false;
-
-  @override
-  void dispose() {
-    _articleSettingsController.dispose();
-    _riddleSettingsController.dispose();
-    _wordSettingsController.dispose();
-    super.dispose();
-  }
-
-  void _reverseText(TextEditingController controller) {
-    final text = controller.text;
-    controller.text = text.split('').reversed.join();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +29,13 @@ class _SettingsViewState extends State<_SettingsView> {
           child: BlocBuilder<SettingsCubit, SettingsState>(
             builder: (context, state) {
               final isLoading = state is SettingsLoading;
+
+              switch (state) {
+                case SettingsInitial():
+                case SettingsLoading():
+                case SettingsSuccess():
+                default:
+              }
 
               return SingleChildScrollView(
                 child: Column(
@@ -96,42 +61,11 @@ class _SettingsViewState extends State<_SettingsView> {
                       child: const Text('Сбросить весь контент'),
                     ),
                     const SizedBox(height: 16),
-
-                    EditableField(
-                      label: 'Статья',
-                      controller: _articleSettingsController,
-                      isEditable: _fieldArticleEditable,
-                      isLoading: isLoading,
-                      onEditToggle: (val) {
-                        setState(() => _fieldArticleEditable = val);
-                      },
-                      onReverse: () => _reverseText(_articleSettingsController),
-                    ),
+                    EditableField(label: 'Статья', isLoading: isLoading),
                     const SizedBox(height: 16),
-
-                    EditableField(
-                      label: 'Загадка',
-                      controller: _riddleSettingsController,
-                      isEditable: _fieldRiddleEditable,
-                      isLoading: isLoading,
-                      onEditToggle: (val) {
-                        setState(() => _fieldRiddleEditable = val);
-                      },
-                      onReverse: () => _reverseText(_riddleSettingsController),
-                    ),
+                    EditableField(label: 'Загадка', isLoading: isLoading),
                     const SizedBox(height: 16),
-
-                    EditableField(
-                      label: 'Слово',
-                      controller: _wordSettingsController,
-                      isEditable: _fieldWordEditable,
-                      isLoading: isLoading,
-                      onEditToggle: (val) {
-                        setState(() => _fieldWordEditable = val);
-                      },
-                      onReverse: () => _reverseText(_wordSettingsController),
-                    ),
-
+                    EditableField(label: 'Слово', isLoading: isLoading),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: isLoading
@@ -139,7 +73,6 @@ class _SettingsViewState extends State<_SettingsView> {
                           : () => context.read<SettingsCubit>().resetSettings(),
                       child: const Text('Сбросить все настройки'),
                     ),
-
                     const SizedBox(height: 32),
                   ],
                 ),
