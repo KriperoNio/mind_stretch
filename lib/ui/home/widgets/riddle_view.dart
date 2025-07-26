@@ -44,9 +44,32 @@ class RiddleView extends StatelessWidget {
                   ],
                 );
               case RiddleError():
-                return Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Center(child: Text(state.message)),
+                return Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Загадка',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 32,
+                          ),
+                          softWrap: true,
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            content.read<RiddleCubit>().refresh();
+                          },
+                          icon: Icon(Icons.refresh),
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Center(child: Text(state.message)),
+                    ),
+                  ],
                 );
             }
           },

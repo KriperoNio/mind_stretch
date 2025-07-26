@@ -4,21 +4,24 @@ import 'package:mind_stretch/core/logger/app_logger.dart';
 class EditableField extends StatefulWidget {
   final String label;
   final String initialValue;
-
   final bool isLoading;
-  final bool showEditToggle;
+
+  final VoidCallback? onReset;
+
+  final ValueChanged<String> onSave;
 
   final ValueChanged<String>? onChanged;
+  final ValueChanged<bool>? onEditToggle;
 
   const EditableField({
     super.key,
     required this.label,
+    required this.onSave,
     this.initialValue = '',
-
     this.isLoading = false,
-    this.showEditToggle = true,
-
     this.onChanged,
+    this.onReset,
+    this.onEditToggle,
   });
 
   @override
@@ -27,12 +30,21 @@ class EditableField extends StatefulWidget {
 
 class _EditableFieldState extends State<EditableField> {
   late final TextEditingController _controller;
+  final ValueNotifier<bool> _isDirtyNotifier = ValueNotifier(false);
   bool _isEditable = false;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.initialValue);
+    _controller.addListener(_updateDirtyState);
+  }
+
+  void _updateDirtyState() {
+    final isDirty = _controller.text != widget.initialValue;
+    if (_isDirtyNotifier.value != isDirty) {
+      _isDirtyNotifier.value = isDirty;
+    }
   }
 
   @override
@@ -46,16 +58,34 @@ class _EditableFieldState extends State<EditableField> {
 
   @override
   void dispose() {
+    _controller.removeListener(_updateDirtyState);
     _controller.dispose();
+    _isDirtyNotifier.dispose();
     super.dispose();
   }
 
   void _handleEditToggle(bool value) {
-    setState(() => _isEditable = value);
-    if (!value && widget.onChanged != null) {
-      AppLogger.info('>>> _handleEditToggle', name: 'EditableField $hashCode');
+    if (_isEditable != value) {
+      setState(() => _isEditable = value);
+      widget.onEditToggle?.call(value);
+    }
+
+    if (!value &&
+        _controller.text == widget.initialValue &&
+        widget.onChanged != null) {
       widget.onChanged!(_controller.text);
     }
+  }
+
+  void _handleReset() {
+    _controller.text = widget.initialValue;
+    widget.onReset?.call();
+    _handleEditToggle(false);
+  }
+
+  void _handleSave() {
+    widget.onSave.call(_controller.text);
+    _handleEditToggle(false);
   }
 
   @override
@@ -63,23 +93,33 @@ class _EditableFieldState extends State<EditableField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            if (widget.showEditToggle && !widget.isLoading) ...[
-              Checkbox(
-                value: _isEditable,
-                onChanged: (value) => _handleEditToggle(value ?? false),
-              ),
-              const Text('Редактировать'),
-            ] else ...[
-              IconButton(
-                onPressed: () {},
-                icon: Icon(Icons.swap_horiz_rounded),
-              ),
-              Spacer(),
-              IconButton(onPressed: () {}, icon: Icon(Icons.backup_rounded)),
-            ],
-          ],
+        ValueListenableBuilder<bool>(
+          valueListenable: _isDirtyNotifier,
+          builder: (context, isDirty, _) {
+            return Row(
+              children: [
+                if (!_isEditable || !isDirty) ...[
+                  Checkbox(
+                    value: _isEditable,
+                    onChanged: widget.isLoading
+                        ? null
+                        : (value) => _handleEditToggle(value ?? false),
+                  ),
+                  const Text('Редактировать'),
+                ] else ...[
+                  IconButton(
+                    onPressed: widget.isLoading ? null : _handleReset,
+                    icon: const Icon(Icons.swap_horiz_rounded),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: widget.isLoading ? null : _handleSave,
+                    icon: const Icon(Icons.backup_rounded),
+                  ),
+                ],
+              ],
+            );
+          },
         ),
         TextField(
           controller: _controller,

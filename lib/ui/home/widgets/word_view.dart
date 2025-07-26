@@ -44,9 +44,31 @@ class WordView extends StatelessWidget {
                   ],
                 );
               case WordError():
-                return Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Center(child: Text(state.message)),
+                return Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Слово',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 32,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            content.read<WordCubit>().refresh();
+                          },
+                          icon: Icon(Icons.refresh),
+                        ),
+                      ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Center(child: Text(state.message)),
+                    ),
+                  ],
                 );
             }
           },

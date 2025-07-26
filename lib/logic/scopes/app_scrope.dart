@@ -4,6 +4,7 @@ import 'package:mind_stretch/data/api/api_client.dart';
 import 'package:mind_stretch/data/repository/local/storage_repository_impl.dart';
 import 'package:mind_stretch/data/repository/remote/deepseek_repository_impl.dart';
 import 'package:mind_stretch/data/repository/remote/wikipedia_repository_impl.dart';
+import 'package:mind_stretch/logic/bloc/settings_bloc.dart';
 import 'package:mind_stretch/logic/cubit/word_cubit.dart';
 import 'package:mind_stretch/logic/cubit/riddle_cubit.dart';
 import 'package:mind_stretch/logic/cubit/article_cubit.dart';
@@ -33,6 +34,8 @@ class _AppScropeState extends State<AppScope> {
   late final RiddleCubit riddleCubit;
   late final WordCubit wordCubit;
 
+  late final SettingsBloc settingsBloc;
+
   @override
   void initState() {
     super.initState();
@@ -56,6 +59,13 @@ class _AppScropeState extends State<AppScope> {
       storage: storageRepository,
       deepseek: deepseekRepository,
     );
+
+    settingsBloc = SettingsBloc(
+      storage: storageRepository,
+      articleCubit: articleCubit,
+      riddleCubit: riddleCubit,
+      wordCubit: wordCubit,
+    );
   }
 
   @override
@@ -71,6 +81,9 @@ class _AppScropeState extends State<AppScope> {
         ),
         RepositoryProvider<StorageRepository>(
           create: (context) => storageRepository,
+        ),
+        BlocProvider<SettingsBloc>(
+          create: (BuildContext context) => settingsBloc,
         ),
       ],
       child: widget.child,

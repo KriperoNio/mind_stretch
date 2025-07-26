@@ -138,11 +138,34 @@ class RiddleCubit extends Cubit<RiddleState> {
           emit(RiddleError('Ошибка при повторной генерации загадки: $e'));
         }
       }
+    } else if (missingParsed && savedRaw == null) {
+      try {
+        final specificTopic = savedSettings?.specificTopic;
+
+        final riddle = await _deepseek.generate<Riddle>(
+          type: GenerationType.riddle,
+          specificTopic: specificTopic,
+        );
+
+        final updatedModel = ContentWithSettingsModel(
+          content: riddle.toString(),
+          settings: savedSettings ?? SettingsModel(),
+        );
+
+        await _storage.saveModel(StorageContentSection.riddle, updatedModel);
+
+        emit(RiddleLoaded(riddle: riddle, settings: updatedModel.settings));
+      } catch (e) {
+        emit(RiddleError('Ошибка при повторной генерации загадки: $e'));
+      }
     }
   }
 
   Future<void> resetAndLoad() async {
-    await _storage.removeValue(StorageContentSection.riddle, StorageContentKey.content);
+    await _storage.removeValue(
+      StorageContentSection.riddle,
+      StorageContentKey.content,
+    );
     await load(force: true);
   }
 }

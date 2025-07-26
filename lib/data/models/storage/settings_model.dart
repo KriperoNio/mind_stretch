@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class SettingsModel {
   final int? maxTokens;
   final String? specificTopic;
@@ -11,8 +13,29 @@ class SettingsModel {
     );
   }
 
+  factory SettingsModel.fromString(String source) {
+    try {
+      final Map<String, dynamic> json = jsonDecode(source);
+      return SettingsModel.fromJson(json);
+    } catch (e) {
+      return SettingsModel();
+    }
+  }
+
   Map<String, dynamic> toJson() {
     return {'maxTokens': maxTokens, 'specificTopic': specificTopic};
+  }
+
+  @override
+  String toString() {
+    return jsonEncode(toJson());
+  }
+
+  SettingsModel copyWith({int? maxTokens, String? specificTopic}) {
+    return SettingsModel(
+      maxTokens: maxTokens ?? this.maxTokens,
+      specificTopic: specificTopic ?? this.specificTopic,
+    );
   }
 
   @override

@@ -24,6 +24,7 @@ class MindStretch extends StatelessWidget {
         systemNavigationBarColor: Colors.transparent,
       ),
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Mind Stretch',
         themeMode: ThemeMode.light,
         theme: AppTheme.lightTheme,

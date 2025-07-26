@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:mind_stretch/logic/scopes/control_content_scope.dart';
 import 'package:mind_stretch/ui/home/widgets/article_view.dart';
 import 'package:mind_stretch/ui/home/widgets/riddle_view.dart';
 import 'package:mind_stretch/ui/home/widgets/word_view.dart';
@@ -26,7 +25,12 @@ class HomePage extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: CustomScrollView(
-            slivers: [RiddleView(), WordView(), ArticleView()],
+            slivers: [
+              RiddleView(),
+              WordView(),
+              ArticleView(),
+              SliverPadding(padding: EdgeInsetsGeometry.only(bottom: 16)),
+            ],
           ),
         ),
       ),
@@ -36,9 +40,7 @@ class HomePage extends StatelessWidget {
   void goSettings(BuildContext context) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => ControlContentScope(child: SettingsPage()),
-      ),
+      MaterialPageRoute(builder: (context) => SettingsPage()),
     );
   }
 }

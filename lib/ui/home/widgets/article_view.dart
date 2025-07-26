@@ -55,9 +55,39 @@ class ArticleView extends StatelessWidget {
                 ],
               );
             case ArticleError():
-              return Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Center(child: Text(state.message)),
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Не замарачиваюсь со Stack!
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: const Text(
+                          'Статья',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 32,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          softWrap: true,
+                        ),
+                      ),
+                      Spacer(),
+                      IconButton(
+                        onPressed: () => context.read<ArticleCubit>().refresh(),
+                        icon: const Icon(Icons.refresh),
+                        constraints: const BoxConstraints(),
+                        padding: EdgeInsets.zero,
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Center(child: Text(state.message)),
+                  ),
+                ],
               );
           }
         },
