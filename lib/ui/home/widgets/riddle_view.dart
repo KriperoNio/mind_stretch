@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mind_stretch/logic/cubit/riddle_cubit.dart';
+import 'package:mind_stretch/ui/widgets/error_illustration.dart';
 
 class RiddleView extends StatelessWidget {
   const RiddleView({super.key});
@@ -64,6 +65,12 @@ class RiddleView extends StatelessWidget {
                           icon: Icon(Icons.refresh),
                         ),
                       ],
+                    ),
+                    Center(
+                      child: ErrorIllustration(
+                        error: state.error ?? '',
+                        height: 200,
+                      ),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(16.0),

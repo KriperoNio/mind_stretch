@@ -46,7 +46,7 @@ class WordCubit extends Cubit<WordState> {
         await _storage.saveModel(StorageContentSection.word, updatedModel);
         model = updatedModel;
       } catch (e) {
-        emit(WordError('Ошибка при генерации слова: $e'));
+        emit(WordError('Ошибка при генерации слова: $e', e));
         return;
       }
     }
@@ -76,7 +76,7 @@ class WordCubit extends Cubit<WordState> {
       '${'-' * 24}\n'
       '$savedWord | $currentWord\n'
       '$wordChanged\n',
-      name: 'word_bloc\n',
+      name: 'word_cubit\n',
     );
 
     if (settingsChanged) {
@@ -95,7 +95,7 @@ class WordCubit extends Cubit<WordState> {
 
         emit(WordLoaded(word: newWord, settings: newModel.settings));
       } catch (e) {
-        emit(WordError('Ошибка при генерации слова при смене настроек: $e'));
+        emit(WordError('Ошибка при генерации слова при смене настроек: $e', e));
       }
     } else if (wordChanged) {
       try {
@@ -118,7 +118,7 @@ class WordCubit extends Cubit<WordState> {
         await _storage.saveModel(StorageContentSection.word, newModel);
         emit(WordLoaded(word: newWord, settings: newModel.settings));
       } catch (e) {
-        emit(WordError('Ошибка при восстановлении слова: $e'));
+        emit(WordError('Ошибка при восстановлении слова: $e', e));
       }
     }
   }
@@ -147,5 +147,6 @@ class WordLoaded extends WordState {
 
 class WordError extends WordState {
   final String message;
-  WordError(this.message);
+  final Object? error;
+  WordError(this.message, [this.error]);
 }

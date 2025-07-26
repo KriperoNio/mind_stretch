@@ -115,9 +115,9 @@ class _SpecificTopicField extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocSelector<SettingsBloc, SettingsState, String>(
       selector: (state) {
-        ///Это обходит сам state, что может привести к тому, что BlocSelector
-        ///не заметит изменения (если settingsMap изменился, а state остался 
-        ///тем же классом — например, SettingsSuccess).
+        /// Это обходит сам state, что может привести к тому, что BlocSelector
+        /// не заметит изменения (если settingsMap изменился, а state остался
+        /// тем же классом — например, SettingsSuccess).
         final map = context.read<SettingsBloc>().settingsMap;
         return map[keyType]?.specificTopic ?? '';
       },

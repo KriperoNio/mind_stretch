@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mind_stretch/logic/cubit/word_cubit.dart';
 import 'package:mind_stretch/ui/home/widgets/formatted_text.dart';
+import 'package:mind_stretch/ui/widgets/error_illustration.dart';
 
 class WordView extends StatelessWidget {
   const WordView({super.key});
@@ -63,6 +64,12 @@ class WordView extends StatelessWidget {
                           icon: Icon(Icons.refresh),
                         ),
                       ],
+                    ),
+                    Center(
+                      child: ErrorIllustration(
+                        error: state.error ?? '',
+                        height: 200,
+                      ),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(16.0),

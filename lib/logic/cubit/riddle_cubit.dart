@@ -47,7 +47,7 @@ class RiddleCubit extends Cubit<RiddleState> {
         await _storage.saveModel(StorageContentSection.riddle, updatedModel);
         model = updatedModel;
       } catch (e) {
-        emit(RiddleError('Ошибка при генерации загадки: $e'));
+        emit(RiddleError('Ошибка при генерации загадки: $e', e));
         return;
       }
     }
@@ -56,7 +56,7 @@ class RiddleCubit extends Cubit<RiddleState> {
       final parsed = Riddle.fromString(model!.content!);
       emit(RiddleLoaded(riddle: parsed, settings: model.settings));
     } catch (e) {
-      emit(RiddleError('Ошибка при разборе загадки: $e'));
+      emit(RiddleError('Ошибка при разборе загадки: $e', e));
     }
   }
 
@@ -85,7 +85,7 @@ class RiddleCubit extends Cubit<RiddleState> {
       '$riddleChanged\n'
       '${'-' * 24}\n'
       '$missingParsed\n',
-      name: 'riddle_bloc\n',
+      name: 'riddle_cubit\n',
     );
 
     if (settingsChanged) {
@@ -106,14 +106,14 @@ class RiddleCubit extends Cubit<RiddleState> {
 
         emit(RiddleLoaded(riddle: riddle, settings: updatedModel.settings));
       } catch (e) {
-        emit(RiddleError('Ошибка при генерации загадки: $e'));
+        emit(RiddleError('Ошибка при генерации загадки: $e', e));
       }
     } else if (riddleChanged) {
       try {
         final parsed = Riddle.fromString(savedRaw!);
         emit(RiddleLoaded(riddle: parsed, settings: savedSettings));
       } catch (e) {
-        emit(RiddleError('Ошибка при восстановлении загадки: $e'));
+        emit(RiddleError('Ошибка при восстановлении загадки: $e', e));
       }
     } else if (missingParsed && savedRaw != null) {
       try {
@@ -135,7 +135,7 @@ class RiddleCubit extends Cubit<RiddleState> {
 
           emit(RiddleLoaded(riddle: riddle, settings: updatedModel.settings));
         } catch (e) {
-          emit(RiddleError('Ошибка при повторной генерации загадки: $e'));
+          emit(RiddleError('Ошибка при повторной генерации загадки: $e', e));
         }
       }
     } else if (missingParsed && savedRaw == null) {
@@ -156,7 +156,7 @@ class RiddleCubit extends Cubit<RiddleState> {
 
         emit(RiddleLoaded(riddle: riddle, settings: updatedModel.settings));
       } catch (e) {
-        emit(RiddleError('Ошибка при повторной генерации загадки: $e'));
+        emit(RiddleError('Ошибка при повторной генерации загадки: $e', e));
       }
     }
   }
@@ -194,5 +194,6 @@ class RiddleLoaded extends RiddleState {
 
 class RiddleError extends RiddleState {
   final String message;
-  RiddleError(this.message);
+  final Object? error;
+  RiddleError(this.message, [this.error]);
 }

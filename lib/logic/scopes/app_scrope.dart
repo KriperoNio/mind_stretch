@@ -83,7 +83,7 @@ class _AppScropeState extends State<AppScope> {
           create: (context) => storageRepository,
         ),
         BlocProvider<SettingsBloc>(
-          create: (BuildContext context) => settingsBloc,
+          create: (BuildContext context) => settingsBloc..add(LoadSettings()),
         ),
       ],
       child: widget.child,

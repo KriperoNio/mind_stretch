@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mind_stretch/logic/cubit/article_cubit.dart';
+import 'package:mind_stretch/ui/widgets/error_illustration.dart';
 
 class ArticleView extends StatelessWidget {
   const ArticleView({super.key});
@@ -82,6 +83,12 @@ class ArticleView extends StatelessWidget {
                         padding: EdgeInsets.zero,
                       ),
                     ],
+                  ),
+                  Center(
+                    child: ErrorIllustration(
+                      error: state.error ?? '',
+                      height: 200,
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(16.0),

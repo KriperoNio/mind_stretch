@@ -53,7 +53,7 @@ class ArticleCubit extends Cubit<ArticleState> {
         );
         model = updatedModel;
       } catch (e) {
-        emit(ArticleError('Ошибка при генерации заголовка: $e'));
+        emit(ArticleError('Ошибка при генерации заголовка: $e', e));
         return;
       }
     }
@@ -68,13 +68,11 @@ class ArticleCubit extends Cubit<ArticleState> {
         ),
       );
     } catch (e) {
-      emit(ArticleError('Ошибка при получении статьи: $e'));
+      emit(ArticleError('Ошибка при получении статьи: $e', e));
     }
   }
 
   Future<void> refresh() async {
-    AppLogger.debug('refresh', name: 'article_bloc');
-
     final current = state is ArticleLoaded ? state as ArticleLoaded : null;
 
     ContentWithSettingsModel? model = await _storage.loadModel(
@@ -101,7 +99,7 @@ class ArticleCubit extends Cubit<ArticleState> {
       '$titleChanged\n'
       '${'-' * 24}\n'
       '$articleMissing\n',
-      name: 'word_bloc\n',
+      name: 'article_cubit\n',
     );
 
     if (settingsChanged) {
@@ -133,7 +131,7 @@ class ArticleCubit extends Cubit<ArticleState> {
           ),
         );
       } catch (e) {
-        emit(ArticleError('Ошибка при генерации заголовка: $e'));
+        emit(ArticleError('Ошибка при генерации заголовка: $e', e));
       }
     } else if (titleChanged) {
       try {
@@ -149,7 +147,7 @@ class ArticleCubit extends Cubit<ArticleState> {
           ),
         );
       } catch (e) {
-        emit(ArticleError('Ошибка при загрузке сохранённой статьи: $e'));
+        emit(ArticleError('Ошибка при загрузке сохранённой статьи: $e', e));
       }
     } else if (articleMissing && savedTitle != null) {
       try {
@@ -192,14 +190,48 @@ class ArticleCubit extends Cubit<ArticleState> {
             ),
           );
         } catch (e) {
-          emit(ArticleError('Ошибка при восстановлении статьи: $e'));
+          emit(ArticleError('Ошибка при восстановлении статьи: $e', e));
         }
+      }
+    } else if (articleMissing && savedTitle == null) {
+      try {
+        final specificTopic = savedSettings?.specificTopic;
+
+        final newTitle = await _deepseek.generate<String>(
+          type: GenerationType.articleTitle,
+          specificTopic: specificTopic,
+        );
+
+        final updatedModel = ContentWithSettingsModel(
+          content: newTitle,
+          settings: savedSettings ?? SettingsModel(),
+        );
+
+        await _storage.saveModel(
+          StorageContentSection.titleArticle,
+          updatedModel,
+        );
+
+        final article = await _wikipedia.getArticleFromTitle(title: newTitle);
+
+        emit(
+          ArticleLoaded(
+            title: newTitle,
+            article: article,
+            settings: updatedModel.settings,
+          ),
+        );
+      } catch (e) {
+        emit(ArticleError('Ошибка при повтроной генерации заголовка: $e', e));
       }
     }
   }
 
   Future<void> resetAndLoad() async {
-    await _storage.removeValue(StorageContentSection.titleArticle, StorageContentKey.content);
+    await _storage.removeValue(
+      StorageContentSection.titleArticle,
+      StorageContentKey.content,
+    );
     await load(force: true);
   }
 }
@@ -220,5 +252,6 @@ class ArticleLoaded extends ArticleState {
 
 class ArticleError extends ArticleState {
   final String message;
-  ArticleError(this.message);
+  final Object? error;
+  ArticleError(this.message, [this.error]);
 }
