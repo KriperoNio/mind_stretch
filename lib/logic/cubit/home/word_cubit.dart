@@ -76,7 +76,7 @@ class WordCubit extends Cubit<WordState> {
       '${'-' * 24}\n'
       '$savedWord | $currentWord\n'
       '$wordChanged\n',
-      name: 'word_cubit\n',
+      name: 'WordCubit',
     );
 
     if (settingsChanged) {

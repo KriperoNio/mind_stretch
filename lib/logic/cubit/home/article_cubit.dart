@@ -99,7 +99,7 @@ class ArticleCubit extends Cubit<ArticleState> {
       '$titleChanged\n'
       '${'-' * 24}\n'
       '$articleMissing\n',
-      name: 'article_cubit\n',
+      name: 'ArticleCubit',
     );
 
     if (settingsChanged) {

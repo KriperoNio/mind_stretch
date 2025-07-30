@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mind_stretch/ui/home/widgets/article_view.dart';
-import 'package:mind_stretch/ui/home/widgets/riddle_view.dart';
-import 'package:mind_stretch/ui/home/widgets/word_view.dart';
+import 'package:mind_stretch/ui/home/widgets/views/article_view.dart';
+import 'package:mind_stretch/ui/home/widgets/views/riddle_view.dart';
+import 'package:mind_stretch/ui/home/widgets/views/word_view.dart';
 import 'package:mind_stretch/ui/settings/settings_page.dart';
 
 class HomePage extends StatelessWidget {

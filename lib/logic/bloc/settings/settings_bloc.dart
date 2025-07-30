@@ -3,9 +3,9 @@ import 'package:mind_stretch/core/logger/app_logger.dart';
 import 'package:mind_stretch/core/storage/keys/settings_key.dart';
 import 'package:mind_stretch/core/storage/keys/storage_content_key.dart';
 import 'package:mind_stretch/data/models/storage/settings_model.dart';
-import 'package:mind_stretch/logic/cubit/article_cubit.dart';
-import 'package:mind_stretch/logic/cubit/riddle_cubit.dart';
-import 'package:mind_stretch/logic/cubit/word_cubit.dart';
+import 'package:mind_stretch/logic/cubit/home/article_cubit.dart';
+import 'package:mind_stretch/logic/cubit/home/riddle_cubit.dart';
+import 'package:mind_stretch/logic/cubit/home/word_cubit.dart';
 import 'package:mind_stretch/logic/repository/local/storage_repository.dart';
 
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {

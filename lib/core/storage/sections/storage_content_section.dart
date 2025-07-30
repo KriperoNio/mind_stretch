@@ -4,7 +4,8 @@ enum StorageContentSection implements SectionProvider {
   riddle('riddle'),
   word('word'),
   titleArticle('title_article'),
-  currentDate('current_day');
+  currentDate('current_day'),
+  topicChips('topic_chips');
 
   @override
   final String storageKey;

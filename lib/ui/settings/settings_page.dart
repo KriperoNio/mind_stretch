@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mind_stretch/core/logger/app_logger.dart';
 import 'package:mind_stretch/core/storage/keys/settings_key.dart';
-import 'package:mind_stretch/logic/bloc/settings_bloc.dart';
+import 'package:mind_stretch/logic/bloc/settings/settings_bloc.dart';
+import 'package:mind_stretch/logic/cubit/settings/topic_chips_cubit.dart';
 import 'package:mind_stretch/ui/settings/widgets/editable_field.dart';
+import 'package:mind_stretch/ui/settings/widgets/topic_chips_carousel.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -66,6 +68,20 @@ class SettingsPage extends StatelessWidget {
                               child: const Text('Сбросить весь контент'),
                             ),
                             const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () => context
+                                  .read<TopicChipsCubit>()
+                                  .resetAndLoad(),
+                              child: const Text('Сбросить все чипсы'),
+                            ),
+                            const SizedBox(height: 8),
+
+                            TopicChipsCarousel(
+                              onSelected: (value) {
+                                AppLogger.log('>>> $value');
+                              },
+                            ),
+
                             _SpecificTopicField(keyType: SettingsKey.article),
                             const SizedBox(height: 16),
                             _SpecificTopicField(keyType: SettingsKey.riddle),

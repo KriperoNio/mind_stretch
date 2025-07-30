@@ -85,7 +85,7 @@ class RiddleCubit extends Cubit<RiddleState> {
       '$riddleChanged\n'
       '${'-' * 24}\n'
       '$missingParsed\n',
-      name: 'riddle_cubit\n',
+      name: 'RiddleCubit',
     );
 
     if (settingsChanged) {

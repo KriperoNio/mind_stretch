@@ -1,65 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mind_stretch/logic/cubit/word_cubit.dart';
-import 'package:mind_stretch/ui/home/widgets/formatted_text.dart';
+import 'package:mind_stretch/logic/cubit/home/riddle_cubit.dart';
 import 'package:mind_stretch/ui/widgets/error_illustration.dart';
 
-class WordView extends StatelessWidget {
-  const WordView({super.key});
+class RiddleView extends StatelessWidget {
+  const RiddleView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return SliverList(
       delegate: SliverChildListDelegate.fixed([
-        BlocBuilder<WordCubit, WordState>(
+        BlocBuilder<RiddleCubit, RiddleState>(
           buildWhen: (oldState, newState) => oldState != newState,
           builder: (content, state) {
             switch (state) {
-              case WordInitial() || WordLoading():
+              case RiddleInitial() || RiddleLoading():
                 return const Padding(
                   padding: EdgeInsets.all(16.0),
                   child: Center(child: CircularProgressIndicator()),
                 );
-              case WordLoaded():
+              case RiddleLoaded():
                 return Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Слово',
+                          'Загадка',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 32,
                           ),
+                          softWrap: true,
                         ),
                         IconButton(
                           onPressed: () {
-                            content.read<WordCubit>().refresh();
+                            content.read<RiddleCubit>().refresh();
                           },
                           icon: Icon(Icons.refresh),
                         ),
                       ],
                     ),
-                    RepaintBoundary(child: FormattedText(state.word ?? '')),
+                    RepaintBoundary(child: Text(state.riddle?.riddle ?? '')),
                   ],
                 );
-              case WordError():
+              case RiddleError():
                 return Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Слово',
+                          'Загадка',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 32,
                           ),
+                          softWrap: true,
                         ),
                         IconButton(
                           onPressed: () {
-                            content.read<WordCubit>().refresh();
+                            content.read<RiddleCubit>().refresh();
                           },
                           icon: Icon(Icons.refresh),
                         ),

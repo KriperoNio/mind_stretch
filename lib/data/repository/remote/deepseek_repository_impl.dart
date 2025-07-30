@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:mind_stretch/data/api/api_client.dart';
@@ -14,8 +15,16 @@ class DeepseekRepositoryImpl implements DeepseekRepository {
   @override
   /// Генерирует запрос для deepseek в зависимости от type-а
   /// нужного результата и специфики запроса.
-  Future<T> generate<T>({required GenerationType type, String? specificTopic}) async {
-    final systemMessage = _getSystemMessage(type, specificTopic: specificTopic);
+  Future<T> generate<T>({
+    required GenerationType type,
+    String? specificTopic,
+    String? forA,
+  }) async {
+    final systemMessage = _getSystemMessage(
+      type,
+      specificTopic: specificTopic,
+      forA: forA,
+    );
     final response = await _makeApiRequest(systemMessage);
     return _parseResponse<T>(response, type);
   }
@@ -23,8 +32,11 @@ class DeepseekRepositoryImpl implements DeepseekRepository {
   String _getSystemMessage(
     GenerationType type, {
     String? specificTopic,
+    String? forA,
   }) {
-    final topicPart = specificTopic != null ? '- On the topic: $specificTopic\n' : '';
+    final topicPart = specificTopic != null
+        ? '- On the topic: $specificTopic\n'
+        : '';
 
     switch (type) {
       case GenerationType.riddle:
@@ -61,6 +73,29 @@ class DeepseekRepositoryImpl implements DeepseekRepository {
             'Text without formatting (as you usually do in github format).'
             'Write it in Russian without parentheses.Example:\n'
             'Парадокс кошки с маслом\nЭффект Мпембы\nЭффект Лейденфроста';
+      case GenerationType.topicChips:
+        return 'Come up with a list of 32 different topics (for example, '
+            'science, art, sports), formalize each item in the format of "Name 🎨",'
+            ', where 🎨 is a suitable smiley face for a phone device. Make the list'
+            'diverse and interesting. An example of your response to me (dart: List<String>)'
+            '["Culture 🖼", "History 📜", "Technique 💻"], for further parsing.'
+            "Don't add anything superfluous, just a list, without your comments.";
+      case GenerationType.specificTopics:
+        return 'Create a special request theme for generating Russian-language content based on the keys listed '
+            'in `forAPart`. Use the variable `specificTopic` as contextual input for the theme.'
+            'Return the result strictly as a Dart map (`Map<String, String>`) with each key from `forAPart` '
+            'mapped to a short and relevant Russian-language theme for request.'
+            'Variables:\n'
+            '- forAPart: $forA — List<String> list of content types to generate themes for, e.g. ["riddle", "word"]'
+            '- specificTopic: $specificTopic — String contextual subject to focus the themes around.'
+            'Example request variables:\n'
+            '- forAPart: ["article", "word"]'
+            '- specificTopic: Квантовая физика'
+            'for this Example response format:\n'
+            '{"article": "Квантовая физика и загадки настоящего", "word": "Научный термин из квантовой физики"}'
+            'If forAPart = ["riddle"], expected output:\n'
+            '{"riddle": "Летние послания"}'
+            '⚠ Output only the Dart map, without any additional explanations or formatting.';
     }
   }
 
@@ -99,12 +134,17 @@ class DeepseekRepositoryImpl implements DeepseekRepository {
     final content = response.content;
 
     switch (type) {
-      case GenerationType.riddle:
-        return Riddle.fromString(content) as T;
       case GenerationType.word:
-        return content as T;
       case GenerationType.articleTitle:
         return content as T;
+      case GenerationType.riddle:
+        return Riddle.fromString(content) as T;
+      case GenerationType.topicChips:
+        final decoded = jsonDecode(content) as List<dynamic>;
+        return decoded.cast<String>() as T;
+      case GenerationType.specificTopics:
+        final decoded = jsonDecode(content) as Map<String, String>;
+        return decoded.cast<String, String>() as T;
     }
   }
 }

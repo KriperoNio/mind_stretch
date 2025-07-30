@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:mind_stretch/core/theme/theme.dart';
-import 'package:mind_stretch/logic/scopes/app_scrope.dart';
+import 'package:mind_stretch/core/theme/app_theme.dart';
+import 'package:mind_stretch/logic/scope/app_scope.dart';
 import 'package:mind_stretch/ui/home/home_page.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Инициализация Flutter
-
-  // Инициализация окружения и зависимостей
-  await dotenv.load(fileName: ".env"); // Загрузка API ключей из .env
+  await dotenv.load(fileName: ".env");
+  WidgetsFlutterBinding.ensureInitialized();
 
   runApp(AppScope(child: MindStretch()));
 }
@@ -25,9 +23,9 @@ class MindStretch extends StatelessWidget {
       ),
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Mind Stretch',
         themeMode: ThemeMode.light,
         theme: AppTheme.lightTheme,
+        title: 'Mind Stretch',
         home: const HomePage(),
       ),
     );

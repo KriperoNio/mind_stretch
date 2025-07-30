@@ -23,6 +23,8 @@ class AppTheme {
         titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 32),
       ),
 
+      chipTheme: ChipThemeData(backgroundColor: Color(0xFFFCF2E5)),
+
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           shape: RoundedRectangleBorder(
