@@ -5,15 +5,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mind_stretch/core/logger/app_logger.dart';
 import 'package:mind_stretch/core/storage/keys/storage_content_key.dart';
 import 'package:mind_stretch/core/storage/sections/storage_content_section.dart';
+import 'package:mind_stretch/data/models/generation_model.dart';
+import 'package:mind_stretch/logic/error/effect_emitter.dart';
+import 'package:mind_stretch/logic/error/effects/settings_effect.dart';
 import 'package:mind_stretch/logic/repository/local/storage_repository.dart';
 import 'package:mind_stretch/logic/repository/remote/deepseek_repository.dart';
 
-class TopicChipsCubit extends Cubit<TopicChipsState> { // mixin EffectEmitter<> 
+class TopicChipsCubit extends Cubit<TopicChipsState>
+    with EffectEmitter<SettingsEffect> {
+  // mixin EffectEmitter<>
   final StorageRepository _storage;
   final DeepseekRepository _deepseek;
 
   List<String> _allchips = [];
-  Map<String, String> _generatedMapTopics = {};
 
   TopicChipsCubit({
     required StorageRepository storage,
@@ -45,7 +49,7 @@ class TopicChipsCubit extends Cubit<TopicChipsState> { // mixin EffectEmitter<>
         await _storage.setValue(
           StorageContentSection.topicChips,
           StorageContentKey.content,
-          generatedChips.toString(),
+          jsonEncode(generatedChips),
         );
         _allchips = generatedChips;
         emit(TopicChipsGenerated(chips: chips));
@@ -74,23 +78,41 @@ class TopicChipsCubit extends Cubit<TopicChipsState> { // mixin EffectEmitter<>
     await load(force: true);
   }
 
-  Stream<String?> generateSpecificTopics({
+  Future<Map<String, String>?> generateSpecificTopicsPrompts({
     required String specificTopic,
     required List<String> forA,
-  }) async* {
-    final mapTopics = await _deepseek.generate<Map<String, String>?>(
-      type: GenerationType.specificTopics,
-    );
-    if (mapTopics == null) {
-      _generatedMapTopics = mapTopics!;
-      for (var key in forA) {
-        yield _generatedMapTopics[key];
-      }
-    } else {
-      emit(
-        TopicChipsError('Ошибка при генерации запросов специальных тем: $e', e),
-      );
+  }) async {
+    if (forA.isEmpty) {
+      emitEffect(ShowSnackbar('Ошибка при генерации тем: пустой результат'));
+      return null;
     }
+    try {
+      final mapTopicPromts = await _deepseek.generate<Map<String, String>?>(
+        type: GenerationType.specificTopicPromts,
+        generationModel: GenerationModel(
+          specificTopic: specificTopic,
+          forA: forA,
+        ),
+      );
+
+      if (mapTopicPromts == null) {
+        emitEffect(ShowSnackbar('Ошибка при генерации тем: пустой результат'));
+        return null;
+      }
+
+      return mapTopicPromts;
+    } catch (e) {
+      emitEffect(
+        ShowSnackbar('Ошибка при генерации запросов специальных тем: $e'),
+      );
+      return null;
+    }
+  }
+
+  @override
+  Future<void> close() {
+    disposeEffects();
+    return super.close();
   }
 }
 

@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:mind_stretch/data/api/api_client.dart';
 import 'package:mind_stretch/data/models/deepseek/request_model.dart';
 import 'package:mind_stretch/data/models/deepseek/responce_model.dart';
+import 'package:mind_stretch/data/models/generation_model.dart';
 import 'package:mind_stretch/data/models/riddle.dart';
 import 'package:mind_stretch/logic/repository/remote/deepseek_repository.dart';
 
@@ -17,13 +18,11 @@ class DeepseekRepositoryImpl implements DeepseekRepository {
   /// нужного результата и специфики запроса.
   Future<T> generate<T>({
     required GenerationType type,
-    String? specificTopic,
-    String? forA,
+    GenerationModel? generationModel,
   }) async {
     final systemMessage = _getSystemMessage(
       type,
-      specificTopic: specificTopic,
-      forA: forA,
+      generationModel: generationModel,
     );
     final response = await _makeApiRequest(systemMessage);
     return _parseResponse<T>(response, type);
@@ -31,11 +30,10 @@ class DeepseekRepositoryImpl implements DeepseekRepository {
 
   String _getSystemMessage(
     GenerationType type, {
-    String? specificTopic,
-    String? forA,
+    GenerationModel? generationModel,
   }) {
-    final topicPart = specificTopic != null
-        ? '- On the topic: $specificTopic\n'
+    final topicPart = generationModel?.specificTopic != null
+        ? '- On the topic: ${generationModel?.specificTopic}\n'
         : '';
 
     switch (type) {
@@ -80,14 +78,14 @@ class DeepseekRepositoryImpl implements DeepseekRepository {
             'diverse and interesting. An example of your response to me (dart: List<String>)'
             '["Culture 🖼", "History 📜", "Technique 💻"], for further parsing.'
             "Don't add anything superfluous, just a list, without your comments.";
-      case GenerationType.specificTopics:
+      case GenerationType.specificTopicPromts:
         return 'Create a special request theme for generating Russian-language content based on the keys listed '
             'in `forAPart`. Use the variable `specificTopic` as contextual input for the theme.'
             'Return the result strictly as a Dart map (`Map<String, String>`) with each key from `forAPart` '
             'mapped to a short and relevant Russian-language theme for request.'
             'Variables:\n'
-            '- forAPart: $forA — List<String> list of content types to generate themes for, e.g. ["riddle", "word"]'
-            '- specificTopic: $specificTopic — String contextual subject to focus the themes around.'
+            '- forAPart: ${generationModel?.forA} — List<String> list of content types to generate themes for, e.g. ["riddle", "word"]'
+            '- specificTopic: ${generationModel?.specificTopic} — String contextual subject to focus the themes around.'
             'Example request variables:\n'
             '- forAPart: ["article", "word"]'
             '- specificTopic: Квантовая физика'
@@ -142,7 +140,7 @@ class DeepseekRepositoryImpl implements DeepseekRepository {
       case GenerationType.topicChips:
         final decoded = jsonDecode(content) as List<dynamic>;
         return decoded.cast<String>() as T;
-      case GenerationType.specificTopics:
+      case GenerationType.specificTopicPromts:
         final decoded = jsonDecode(content) as Map<String, String>;
         return decoded.cast<String, String>() as T;
     }

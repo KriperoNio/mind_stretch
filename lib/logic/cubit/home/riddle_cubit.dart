@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mind_stretch/core/logger/app_logger.dart';
 import 'package:mind_stretch/core/storage/keys/storage_content_key.dart';
 import 'package:mind_stretch/core/storage/sections/storage_content_section.dart';
+import 'package:mind_stretch/data/models/generation_model.dart';
 import 'package:mind_stretch/data/models/riddle.dart';
 import 'package:mind_stretch/data/models/storage/content_with_settings_model.dart';
 import 'package:mind_stretch/data/models/storage/settings_model.dart';
@@ -32,11 +33,9 @@ class RiddleCubit extends Cubit<RiddleState> {
 
     if (raw == null) {
       try {
-        final specificTopic = model?.settings.specificTopic;
-
         final riddle = await _deepseek.generate<Riddle>(
           type: GenerationType.riddle,
-          specificTopic: specificTopic,
+          generationModel: GenerationModel.fromSettings(model?.settings),
         );
 
         final updatedModel = ContentWithSettingsModel(
@@ -90,11 +89,9 @@ class RiddleCubit extends Cubit<RiddleState> {
 
     if (settingsChanged) {
       try {
-        final specificTopic = savedSettings?.specificTopic;
-
         final riddle = await _deepseek.generate<Riddle>(
           type: GenerationType.riddle,
-          specificTopic: specificTopic,
+          generationModel: GenerationModel.fromSettings(savedSettings),
         );
 
         final updatedModel = ContentWithSettingsModel(
@@ -123,7 +120,7 @@ class RiddleCubit extends Cubit<RiddleState> {
         try {
           final riddle = await _deepseek.generate<Riddle>(
             type: GenerationType.riddle,
-            specificTopic: savedSettings?.specificTopic,
+            generationModel: GenerationModel.fromSettings(savedSettings),
           );
 
           final updatedModel = ContentWithSettingsModel(
@@ -140,11 +137,9 @@ class RiddleCubit extends Cubit<RiddleState> {
       }
     } else if (missingParsed && savedRaw == null) {
       try {
-        final specificTopic = savedSettings?.specificTopic;
-
         final riddle = await _deepseek.generate<Riddle>(
           type: GenerationType.riddle,
-          specificTopic: specificTopic,
+          generationModel: GenerationModel.fromSettings(savedSettings),
         );
 
         final updatedModel = ContentWithSettingsModel(

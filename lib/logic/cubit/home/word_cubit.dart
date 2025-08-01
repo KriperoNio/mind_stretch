@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mind_stretch/core/logger/app_logger.dart';
 import 'package:mind_stretch/core/storage/keys/storage_content_key.dart';
 import 'package:mind_stretch/core/storage/sections/storage_content_section.dart';
+import 'package:mind_stretch/data/models/generation_model.dart';
 import 'package:mind_stretch/data/models/storage/content_with_settings_model.dart';
 import 'package:mind_stretch/data/models/storage/settings_model.dart';
 import 'package:mind_stretch/logic/repository/local/storage_repository.dart';
@@ -31,11 +32,9 @@ class WordCubit extends Cubit<WordState> {
 
     if (content == null) {
       try {
-        final specificTopic = model?.settings.specificTopic;
-
         final word = await _deepseek.generate<String>(
           type: GenerationType.word,
-          specificTopic: specificTopic,
+          generationModel: GenerationModel.fromSettings(model?.settings),
         );
 
         final updatedModel = ContentWithSettingsModel(
@@ -83,7 +82,7 @@ class WordCubit extends Cubit<WordState> {
       try {
         final newWord = await _deepseek.generate<String>(
           type: GenerationType.word,
-          specificTopic: savedSettings?.specificTopic,
+          generationModel: GenerationModel.fromSettings(savedSettings),
         );
 
         final newModel = ContentWithSettingsModel(
@@ -107,7 +106,7 @@ class WordCubit extends Cubit<WordState> {
       try {
         final newWord = await _deepseek.generate<String>(
           type: GenerationType.word,
-          specificTopic: savedSettings?.specificTopic,
+          generationModel: GenerationModel.fromSettings(savedSettings),
         );
 
         final newModel = ContentWithSettingsModel(

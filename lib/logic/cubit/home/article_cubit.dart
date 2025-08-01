@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mind_stretch/core/logger/app_logger.dart';
 import 'package:mind_stretch/core/storage/keys/storage_content_key.dart';
 import 'package:mind_stretch/core/storage/sections/storage_content_section.dart';
+import 'package:mind_stretch/data/models/generation_model.dart';
 import 'package:mind_stretch/data/models/storage/content_with_settings_model.dart';
 import 'package:mind_stretch/data/models/storage/settings_model.dart';
 import 'package:mind_stretch/data/models/wiki_page.dart';
@@ -36,11 +37,9 @@ class ArticleCubit extends Cubit<ArticleState> {
 
     if (title == null) {
       try {
-        final specificTopic = model?.settings.specificTopic;
-
         title = await _deepseek.generate<String>(
           type: GenerationType.articleTitle,
-          specificTopic: specificTopic,
+          generationModel: GenerationModel.fromSettings(model?.settings),
         );
 
         final updatedModel = ContentWithSettingsModel(
@@ -104,11 +103,9 @@ class ArticleCubit extends Cubit<ArticleState> {
 
     if (settingsChanged) {
       try {
-        final specificTopic = savedSettings?.specificTopic;
-
         final newTitle = await _deepseek.generate<String>(
           type: GenerationType.articleTitle,
-          specificTopic: specificTopic,
+          generationModel: GenerationModel.fromSettings(savedSettings),
         );
 
         final updatedModel = ContentWithSettingsModel(
@@ -163,11 +160,9 @@ class ArticleCubit extends Cubit<ArticleState> {
       } catch (_) {
         // Попытка генерации нового заголовка, если сохраненный невалиден
         try {
-          final specificTopic = savedSettings?.specificTopic;
-
           final newTitle = await _deepseek.generate<String>(
             type: GenerationType.articleTitle,
-            specificTopic: specificTopic,
+            generationModel: GenerationModel.fromSettings(savedSettings),
           );
 
           final updatedModel = ContentWithSettingsModel(
@@ -195,11 +190,9 @@ class ArticleCubit extends Cubit<ArticleState> {
       }
     } else if (articleMissing && savedTitle == null) {
       try {
-        final specificTopic = savedSettings?.specificTopic;
-
         final newTitle = await _deepseek.generate<String>(
           type: GenerationType.articleTitle,
-          specificTopic: specificTopic,
+          generationModel: GenerationModel.fromSettings(savedSettings),
         );
 
         final updatedModel = ContentWithSettingsModel(

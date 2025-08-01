@@ -3,18 +3,24 @@ import 'package:mind_stretch/core/logger/app_logger.dart';
 import 'package:mind_stretch/core/storage/keys/settings_key.dart';
 import 'package:mind_stretch/core/storage/keys/storage_content_key.dart';
 import 'package:mind_stretch/data/models/storage/settings_model.dart';
+import 'package:mind_stretch/logic/controllers/editable_fields_controller.dart';
 import 'package:mind_stretch/logic/cubit/home/article_cubit.dart';
 import 'package:mind_stretch/logic/cubit/home/riddle_cubit.dart';
 import 'package:mind_stretch/logic/cubit/home/word_cubit.dart';
+import 'package:mind_stretch/logic/error/effect_emitter.dart';
+import 'package:mind_stretch/logic/error/effects/settings_effect.dart';
 import 'package:mind_stretch/logic/repository/local/storage_repository.dart';
 
-class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
+class SettingsBloc extends Bloc<SettingsEvent, SettingsState>
+    with EffectEmitter<SettingsEffect> {
   final StorageRepository _storage;
   final ArticleCubit _articleCubit;
   final RiddleCubit _riddleCubit;
   final WordCubit _wordCubit;
 
   Map<SettingsKey, SettingsModel> _settingsMap = {};
+
+  final EditableFieldsController fieldsController = EditableFieldsController();
 
   SettingsBloc({
     required StorageRepository storage,
@@ -58,8 +64,12 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       _settingsMap = result;
       emit(SettingsInitial());
     } catch (e) {
-      emit(SettingsFailure(e.toString()));
+      emit(SettingsError(e.toString()));
     }
+  }
+
+  void updateSpecificTextField(SettingsKey key, String newValue) {
+    fieldsController.updateText(key, newValue);
   }
 
   Future<void> _onUpdateSpecificTopic(
@@ -78,7 +88,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       _settingsMap[event.key] = updated;
       emit(SettingsSuccess());
     } catch (e) {
-      emit(SettingsFailure(e.toString()));
+      emitEffect(ShowSnackbar(e.toString()));
     }
   }
 
@@ -92,7 +102,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       _settingsMap.remove(event.key);
       emit(SettingsSuccess());
     } catch (e) {
-      emit(SettingsFailure(e.toString()));
+      emitEffect(ShowSnackbar(e.toString()));
     }
   }
 
@@ -109,7 +119,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       ]);
       emit(SettingsSuccess());
     } catch (e) {
-      emit(SettingsFailure(e.toString()));
+      emitEffect(ShowSnackbar(e.toString()));
     }
   }
 
@@ -126,7 +136,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       ]);
       emit(SettingsSuccess());
     } catch (e) {
-      emit(SettingsFailure(e.toString()));
+      emitEffect(ShowSnackbar(e.toString()));
     }
   }
 
@@ -153,12 +163,22 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       _settingsMap.clear();
       emit(SettingsSuccess());
     } catch (e) {
-      emit(SettingsFailure(e.toString()));
+      emitEffect(ShowSnackbar(e.toString()));
     }
   }
 
-  void _onClearSettings(ClearSettings event, Emitter<SettingsState> emit) {
+  Future<void> _onClearSettings(
+    ClearSettings event,
+    Emitter<SettingsState> emit,
+  ) async {
     emit(SettingsInitial());
+  }
+
+  @override
+  Future<void> close() {
+    fieldsController.dispose();
+    disposeEffects();
+    return super.close();
   }
 }
 
@@ -195,7 +215,7 @@ class SettingsLoading extends SettingsState {}
 
 class SettingsSuccess extends SettingsState {}
 
-class SettingsFailure extends SettingsState {
-  final String error;
-  SettingsFailure(this.error);
+class SettingsError extends SettingsState {
+  final Object error;
+  SettingsError(this.error);
 }

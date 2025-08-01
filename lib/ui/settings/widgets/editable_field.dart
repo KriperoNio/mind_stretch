@@ -9,14 +9,18 @@ class EditableField extends StatefulWidget {
   final VoidCallback? onReset;
 
   final ValueChanged<String> onSave;
-
   final ValueChanged<String>? onChanged;
   final ValueChanged<bool>? onEditToggle;
+
+  final TextEditingController controller;
+  final ValueNotifier<bool> isEditableNotifier;
 
   const EditableField({
     super.key,
     required this.label,
     required this.onSave,
+    required this.controller,
+    required this.isEditableNotifier,
     this.initialValue = '',
     this.isLoading = false,
     this.onChanged,
@@ -29,19 +33,17 @@ class EditableField extends StatefulWidget {
 }
 
 class _EditableFieldState extends State<EditableField> {
-  late final TextEditingController _controller;
   final ValueNotifier<bool> _isDirtyNotifier = ValueNotifier(false);
-  bool _isEditable = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.initialValue);
-    _controller.addListener(_updateDirtyState);
+    widget.controller.text = widget.initialValue;
+    widget.controller.addListener(_updateDirtyState);
   }
 
   void _updateDirtyState() {
-    final isDirty = _controller.text != widget.initialValue;
+    final isDirty = widget.controller.text != widget.initialValue;
     if (_isDirtyNotifier.value != isDirty) {
       _isDirtyNotifier.value = isDirty;
     }
@@ -52,39 +54,36 @@ class _EditableFieldState extends State<EditableField> {
     super.didUpdateWidget(oldWidget);
     if (widget.initialValue != oldWidget.initialValue) {
       AppLogger.info('>>> didUpdateWidget', name: 'EditableField $hashCode');
-      _controller.text = widget.initialValue;
+      widget.controller.text = widget.initialValue;
     }
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_updateDirtyState);
-    _controller.dispose();
+    widget.controller.removeListener(_updateDirtyState);
     _isDirtyNotifier.dispose();
     super.dispose();
   }
 
   void _handleEditToggle(bool value) {
-    if (_isEditable != value) {
-      setState(() => _isEditable = value);
-      widget.onEditToggle?.call(value);
-    }
+    widget.isEditableNotifier.value = value;
+    widget.onEditToggle?.call(value);
 
     if (!value &&
-        _controller.text == widget.initialValue &&
+        widget.controller.text == widget.initialValue &&
         widget.onChanged != null) {
-      widget.onChanged!(_controller.text);
+      widget.onChanged!(widget.controller.text);
     }
   }
 
   void _handleReset() {
-    _controller.text = widget.initialValue;
+    widget.controller.text = widget.initialValue;
     widget.onReset?.call();
     _handleEditToggle(false);
   }
 
   void _handleSave() {
-    widget.onSave.call(_controller.text);
+    widget.onSave.call(widget.controller.text);
     _handleEditToggle(false);
   }
 
@@ -96,42 +95,52 @@ class _EditableFieldState extends State<EditableField> {
         ValueListenableBuilder<bool>(
           valueListenable: _isDirtyNotifier,
           builder: (context, isDirty, _) {
-            return Row(
-              children: [
-                if (!_isEditable || !isDirty) ...[
-                  Checkbox(
-                    value: _isEditable,
-                    onChanged: widget.isLoading
-                        ? null
-                        : (value) => _handleEditToggle(value ?? false),
-                  ),
-                  const Text('Редактировать'),
-                ] else ...[
-                  IconButton(
-                    onPressed: widget.isLoading ? null : _handleReset,
-                    icon: const Icon(Icons.swap_horiz_rounded),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: widget.isLoading ? null : _handleSave,
-                    icon: const Icon(Icons.backup_rounded),
-                  ),
-                ],
-              ],
+            return ValueListenableBuilder<bool>(
+              valueListenable: widget.isEditableNotifier,
+              builder: (context, isEditable, _) {
+                return Row(
+                  children: [
+                    if (!isEditable || !isDirty) ...[
+                      Checkbox(
+                        value: isEditable,
+                        onChanged: widget.isLoading
+                            ? null
+                            : (value) => _handleEditToggle(value ?? false),
+                      ),
+                      const Text('Редактировать'),
+                    ] else ...[
+                      IconButton(
+                        onPressed: widget.isLoading ? null : _handleReset,
+                        icon: const Icon(Icons.swap_horiz_rounded),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        onPressed: widget.isLoading ? null : _handleSave,
+                        icon: const Icon(Icons.backup_rounded),
+                      ),
+                    ],
+                  ],
+                );
+              },
             );
           },
         ),
-        TextField(
-          controller: _controller,
-          enabled: _isEditable && !widget.isLoading,
-          maxLines: 4,
-          minLines: 4,
-          decoration: InputDecoration(
-            labelText: widget.label,
-            border: const OutlineInputBorder(),
-            filled: !_isEditable,
-          ),
-          onChanged: _isEditable ? widget.onChanged : null,
+        ValueListenableBuilder<bool>(
+          valueListenable: widget.isEditableNotifier,
+          builder: (context, isEditable, _) {
+            return TextField(
+              controller: widget.controller,
+              enabled: isEditable && !widget.isLoading,
+              maxLines: 4,
+              minLines: 4,
+              decoration: InputDecoration(
+                labelText: widget.label,
+                border: const OutlineInputBorder(),
+                filled: !isEditable,
+              ),
+              onChanged: isEditable ? widget.onChanged : null,
+            );
+          },
         ),
       ],
     );

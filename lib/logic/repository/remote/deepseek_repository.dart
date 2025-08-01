@@ -1,6 +1,11 @@
+import 'package:mind_stretch/data/models/generation_model.dart';
+
 abstract class DeepseekRepository {
   /// Возвращает тип данных в зависимости от [GenerationType]
-  Future<T> generate<T>({required GenerationType type, String? specificTopic});
+  Future<T> generate<T>({
+    required GenerationType type,
+    GenerationModel? generationModel,
+  });
 }
 
 /// enum [GenerationType] определяет, какой тип данных нужно сгенерировать,
@@ -10,7 +15,7 @@ enum GenerationType {
   word(),
   articleTitle(),
   topicChips(),
-  specificTopics();
+  specificTopicPromts();
 
   const GenerationType();
 }
