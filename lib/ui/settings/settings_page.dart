@@ -20,19 +20,23 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   late final StreamSubscription<SettingsEffect> _sub;
+  late final StreamSubscription<SettingsEffect> _subChips;
   late final SettingsEffectHandler _handler;
 
   @override
   void initState() {
     super.initState();
+    final chipsCubit = context.read<TopicChipsCubit>();
     final settingsBloc = context.read<SettingsBloc>();
     _handler = SettingsEffectHandler(context);
     _sub = settingsBloc.effects.listen(_handler.handle);
+    _subChips = chipsCubit.effects.listen(_handler.handle);
   }
 
   @override
   void dispose() {
     _sub.cancel();
+    _subChips.cancel();
     super.dispose();
   }
 
@@ -107,6 +111,17 @@ class _SettingsPageState extends State<SettingsPage> {
                                         forA: forA,
                                       );
                                   AppLogger.log('>>> $result');
+                                  final settingsBloc = context
+                                      .read<SettingsBloc>();
+                                  if (result == null) return;
+                                  for (final entry in result.entries) {
+                                    final key = SettingsKey.values.firstWhere(
+                                      (k) => k.name == entry.key,
+                                      orElse: () => SettingsKey.article,
+                                    );
+
+                                    settingsBloc.updateSpecificTextField(key, entry.value);
+                                  }
                                 },
                               ),
 

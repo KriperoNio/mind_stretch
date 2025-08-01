@@ -9,5 +9,5 @@ class ShowSnackbar extends SettingsEffect {
 
 class PageBack<T> extends SettingsEffect {
   final T? result;
-  const PageBack(this.result);
+  const PageBack([this.result]);
 }

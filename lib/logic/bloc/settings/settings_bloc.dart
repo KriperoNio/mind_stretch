@@ -134,6 +134,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState>
         _riddleCubit.resetAndLoad(),
         _wordCubit.resetAndLoad(),
       ]);
+      emitEffect(PageBack());
       emit(SettingsSuccess());
     } catch (e) {
       emitEffect(ShowSnackbar(e.toString()));

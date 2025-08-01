@@ -18,7 +18,7 @@ class SettingsEffectHandler {
             : null;
         break;
       case PageBack(:final result):
-        Navigator.maybePop(context, result);
+        Navigator.pop(context, result);
         break;
     }
   }

@@ -141,8 +141,9 @@ class DeepseekRepositoryImpl implements DeepseekRepository {
         final decoded = jsonDecode(content) as List<dynamic>;
         return decoded.cast<String>() as T;
       case GenerationType.specificTopicPromts:
-        final decoded = jsonDecode(content) as Map<String, String>;
-        return decoded.cast<String, String>() as T;
+        final Map<String, dynamic> rawMap = jsonDecode(content);
+        final map = rawMap.map((key, value) => MapEntry(key, value.toString()));
+        return map as T;
     }
   }
 }

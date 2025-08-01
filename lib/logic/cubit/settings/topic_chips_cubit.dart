@@ -83,7 +83,7 @@ class TopicChipsCubit extends Cubit<TopicChipsState>
     required List<String> forA,
   }) async {
     if (forA.isEmpty) {
-      emitEffect(ShowSnackbar('Ошибка при генерации тем: пустой результат'));
+      emitEffect(ShowSnackbar('Нужно хотя бы одно активное поле!'));
       return null;
     }
     try {
